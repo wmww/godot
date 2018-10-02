@@ -33,6 +33,8 @@
 #include "core/os/os.h"
 #include "core/project_settings.h"
 #include "drivers/gl_context/context_gl.h"
+#include "core/os/displaydriver.h"
+#include <string.h>
 
 RasterizerStorage *RasterizerGLES3::get_storage() {
 
@@ -250,7 +252,7 @@ void RasterizerGLES3::set_current_render_target(RID p_render_target) {
 	} else {
 		storage->frame.current_rt = NULL;
 		storage->frame.clear_request = false;
-		glViewport(0, 0, OS::get_singleton()->get_window_size().width, OS::get_singleton()->get_window_size().height);
+		glViewport(0, 0, DisplayDriver::get_singleton()->get_window_size().width, DisplayDriver::get_singleton()->get_window_size().height);
 		glBindFramebuffer(GL_FRAMEBUFFER, RasterizerStorageGLES3::system_fbo);
 	}
 }
@@ -278,8 +280,8 @@ void RasterizerGLES3::set_boot_image(const Ref<Image> &p_image, const Color &p_c
 
 	begin_frame(0.0);
 
-	int window_w = OS::get_singleton()->get_video_mode(0).width;
-	int window_h = OS::get_singleton()->get_video_mode(0).height;
+	int window_w = DisplayDriver::get_singleton()->get_video_mode(0).width;
+	int window_h = DisplayDriver::get_singleton()->get_video_mode(0).height;
 
 	glBindFramebuffer(GL_FRAMEBUFFER, RasterizerStorageGLES3::system_fbo);
 	glViewport(0, 0, window_w, window_h);
@@ -340,7 +342,7 @@ void RasterizerGLES3::blit_render_target_to_screen(RID p_render_target, const Re
 
 #if 1
 
-	Size2 win_size = OS::get_singleton()->get_window_size();
+	Size2 win_size = DisplayDriver::get_singleton()->get_window_size();
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, rt->fbo);
 	glReadBuffer(GL_COLOR_ATTACHMENT0);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, RasterizerStorageGLES3::system_fbo);
@@ -406,7 +408,7 @@ void RasterizerGLES3::end_frame(bool p_swap_buffers) {
 	}
 
 	if (p_swap_buffers)
-		OS::get_singleton()->swap_buffers();
+		DisplayDriver::get_singleton()->swap_buffers();
 	else
 		glFinish();
 }

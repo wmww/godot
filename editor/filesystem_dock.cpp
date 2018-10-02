@@ -38,6 +38,7 @@
 #include "core/project_settings.h"
 #include "editor_node.h"
 #include "editor_settings.h"
+#include "core/os/displaydriver.h"
 #include "scene/main/viewport.h"
 
 Ref<Texture> FileSystemDock::_get_tree_item_icon(EditorFileSystemDirectory *p_dir, int p_idx) {
@@ -1631,7 +1632,7 @@ void FileSystemDock::_file_option(int p_option, const Vector<String> p_selected)
 			// Copy the file path
 			if (!p_selected.empty()) {
 				String fpath = p_selected[0];
-				OS::get_singleton()->set_clipboard(fpath);
+				DisplayDriver::get_singleton()->set_clipboard(fpath);
 			}
 		} break;
 

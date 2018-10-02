@@ -36,6 +36,7 @@
 #include "dependency_editor.h"
 #include "editor_resource_preview.h"
 #include "editor_scale.h"
+#include "core/os/displaydriver.h"
 #include "editor_settings.h"
 #include "scene/gui/center_container.h"
 #include "scene/gui/label.h"
@@ -617,7 +618,7 @@ void EditorFileDialog::_item_menu_id_pressed(int p_option) {
 
 		case ITEM_MENU_COPY_PATH: {
 			Dictionary item_meta = item_list->get_item_metadata(item_list->get_current());
-			OS::get_singleton()->set_clipboard(item_meta["path"]);
+			DisplayDriver::get_singleton()->set_clipboard(item_meta["path"]);
 		} break;
 
 		case ITEM_MENU_DELETE: {

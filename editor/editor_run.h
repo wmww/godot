@@ -32,6 +32,7 @@
 #define EDITOR_RUN_H
 
 #include "core/os/os.h"
+#include "core/os/displaydriver.h"
 #include "scene/main/node.h"
 class EditorRun {
 public:

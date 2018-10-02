@@ -155,6 +155,14 @@ Error ContextGL_X11::initialize() {
 	} else {
 		GLXFBConfig *fbc = glXChooseFBConfig(x11_display, DefaultScreen(x11_display), visual_attribs, &fbcount);
 		ERR_FAIL_COND_V(!fbc, ERR_UNCONFIGURED);
+// =======
+// 	*/
+// 	x11_window = XCreateWindow(x11_display, RootWindow(x11_display, vi->screen), 0, 0, DisplayDriver::get_singleton()->get_video_mode().width, DisplayDriver::get_singleton()->get_video_mode().height, 0, vi->depth, InputOutput, vi->visual, CWBorderPixel | CWColormap | CWEventMask, &swa);
+// 	ERR_FAIL_COND_V(!x11_window, ERR_UNCONFIGURED);
+// 	set_class_hint(x11_display, x11_window);
+// 	XMapWindow(x11_display, x11_window);
+// 	//};
+// >>>>>>> 8bf8c083f... Split OS and Display classes
 
 		vi = glXGetVisualFromFBConfig(x11_display, fbc[0]);
 
@@ -254,7 +262,7 @@ bool ContextGL_X11::is_using_vsync() const {
 	return use_vsync;
 }
 
-ContextGL_X11::ContextGL_X11(::Display *p_x11_display, ::Window &p_x11_window, const OS::VideoMode &p_default_video_mode, ContextType p_context_type) :
+ContextGL_X11::ContextGL_X11(::Display *p_x11_display, ::Window &p_x11_window, const DisplayDriver::VideoMode &p_default_video_mode, ContextType p_context_type) :
 		x11_window(p_x11_window) {
 
 	default_video_mode = p_default_video_mode;
