@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  export.cpp                                                           */
+/*  os_freedesktop.h                                                     */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -28,31 +28,85 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#include "export.h"
+#ifndef OS_FREEDESKTOP_H
+#define OS_FREEDESKTOP_H
 
-#include "editor/editor_export.h"
-#include "platform/x11/logo.gen.h"
-#include "scene/resources/texture.h"
+#include "crash_handler_x11.h"
+#include "drivers/alsa/audio_driver_alsa.h"
+#include "drivers/pulseaudio/audio_driver_pulseaudio.h"
+#include "drivers/unix/os_unix.h"
+#include "power_x11.h"
+#include "servers/audio_server.h"
+/**
+	@author Juan Linietsky <reduzio@gmail.com>
+*/
 
-void register_x11_exporter() {
+class OS_Freedesktop : public OS_Unix {
 
-	Ref<EditorExportPlatformPC> platform;
-	platform.instance();
+	List<String> args;
+	char *xmbstring;
+	int xmblen;
+	unsigned long last_timestamp;
 
-	Ref<Image> img = memnew(Image(_x11_logo));
-	Ref<ImageTexture> logo;
-	logo.instance();
-	logo->create_from_image(img);
-	platform->set_logo(logo);
-	platform->set_name("Linux/X11");
-	platform->set_extension("x86");
-	platform->set_extension("x86_64", "binary_format/64_bits");
-	platform->set_release_32("linux_x11_32_release");
-	platform->set_debug_32("linux_x11_32_debug");
-	platform->set_release_64("linux_x11_64_release");
-	platform->set_debug_64("linux_x11_64_debug");
-	platform->set_os_name("X11");
-	platform->set_chmod_flags(0755);
+	IP_Unix *ip_unix;
 
-	EditorExport::get_singleton()->add_export_platform(platform);
-}
+	bool force_quit;
+	bool minimized;
+	bool window_has_focus;
+	bool do_mouse_warp;
+
+#ifdef ALSA_ENABLED
+	AudioDriverALSA driver_alsa;
+#endif
+
+#ifdef PULSEAUDIO_ENABLED
+	AudioDriverPulseAudio driver_pulseaudio;
+#endif
+
+	PowerX11 *power_manager;
+
+	CrashHandler crash_handler;
+
+	int audio_driver_index;
+	unsigned int capture_idle;
+
+protected:
+	virtual int get_audio_driver_count() const;
+	virtual const char *get_audio_driver_name(int p_driver) const;
+
+	virtual void initialize_core();
+	virtual Error initialize(int p_audio_driver);
+	virtual void finalize();
+
+public:
+	virtual String get_name();
+
+	virtual String get_config_path() const;
+	virtual String get_data_path() const;
+	virtual String get_cache_path() const;
+
+	virtual String get_system_dir(SystemDir p_dir) const;
+
+	virtual Error shell_open(String p_uri);
+
+	virtual String get_unique_id() const;
+
+	virtual void alert(const String &p_alert, const String &p_title = "ALERT!");
+
+	virtual OS::PowerState get_power_state();
+	virtual int get_power_seconds_left();
+	virtual int get_power_percent_left();
+
+	virtual bool _check_internal_feature_support(const String &p_feature);
+
+	void run();
+
+	void disable_crash_handler();
+	bool is_disable_crash_handler() const;
+
+	virtual Error move_to_trash(const String &p_path);
+
+	OS_Freedesktop();
+};
+
+#endif
