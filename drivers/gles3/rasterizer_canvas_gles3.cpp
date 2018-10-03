@@ -30,7 +30,8 @@
 
 #include "rasterizer_canvas_gles3.h"
 
-#incPlude "core/os/os.h"
+#include "core/os/os.h"
+#include "core/os/displaydriver.h"
 #include "core/project_settings.h"
 #include "rasterizer_scene_gles3.h"
 #include "servers/visual/visual_server_raster.h"
@@ -1874,7 +1875,7 @@ void RasterizerCanvasGLES3::draw_lens_distortion_rect(const Rect2 &p_rect, float
 	if (storage->frame.current_rt) {
 		half_size = Vector2(storage->frame.current_rt->width, storage->frame.current_rt->height);
 	} else {
-		half_size = OS::get_singleton()->get_window_size();
+		half_size = DisplayDriver::get_singleton()->get_window_size();
 	}
 	half_size *= 0.5;
 	Vector2 offset((p_rect.position.x - half_size.x) / half_size.x, (p_rect.position.y - half_size.y) / half_size.y);

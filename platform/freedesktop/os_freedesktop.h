@@ -35,7 +35,7 @@
 #include "drivers/alsa/audio_driver_alsa.h"
 #include "drivers/pulseaudio/audio_driver_pulseaudio.h"
 #include "drivers/unix/os_unix.h"
-#include "os/input.h"
+#include "core/os/input.h"
 #include "power_x11.h"
 #include "servers/audio_server.h"
 /**

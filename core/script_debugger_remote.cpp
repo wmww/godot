@@ -141,7 +141,7 @@ void ScriptDebuggerRemote::debug(ScriptLanguage *p_script, bool p_can_continue) 
 	}
 
 	if (allow_focus_steal_pid) {
-		OS::get_singleton()->enable_for_stealing_focus(allow_focus_steal_pid);
+		DisplayDriver::get_singleton()->enable_for_stealing_focus(allow_focus_steal_pid);
 	}
 
 	packet_peer_stream->put_var("debug_enter");

@@ -1882,7 +1882,7 @@ void Viewport::_gui_input_event(Ref<InputEvent> p_event) {
 		}
 
 		if (!over) {
-			DisplayDriver::get_singleton()->set_cursor_shape((OS::CursorShape)Input::get_singleton()->get_default_cursor_shape());
+			DisplayDriver::get_singleton()->set_cursor_shape((DisplayDriver::CursorShape)Input::get_singleton()->get_default_cursor_shape());
 			return;
 		}
 

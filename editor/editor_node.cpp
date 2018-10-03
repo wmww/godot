@@ -4537,7 +4537,7 @@ void EditorNode::_video_driver_selected(int p_which) {
 
 	String driver = video_driver->get_item_metadata(p_which);
 
-	String current = OS::get_singleton()->get_video_driver_name(OS::get_singleton()->get_current_video_driver());
+	String current = DisplayDriver::get_singleton()->get_video_driver_name(DisplayDriver::get_singleton()->get_current_video_driver());
 
 	if (driver == current) {
 		return;
@@ -5413,7 +5413,7 @@ EditorNode::EditorNode() {
 	menu_hb->add_child(video_driver);
 
 	String video_drivers = ProjectSettings::get_singleton()->get_custom_property_info()["rendering/quality/driver/driver_name"].hint_string;
-	String current_video_driver = OS::get_singleton()->get_video_driver_name(OS::get_singleton()->get_current_video_driver());
+	String current_video_driver = DisplayDriver::get_singleton()->get_video_driver_name(DisplayDriver::get_singleton()->get_current_video_driver());
 	video_driver_current = 0;
 	for (int i = 0; i < video_drivers.get_slice_count(","); i++) {
 		String driver = video_drivers.get_slice(",", i);

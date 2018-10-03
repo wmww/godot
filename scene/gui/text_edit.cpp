@@ -1432,7 +1432,7 @@ void TextEdit::_notification(int p_what) {
 				draw_caret = true;
 			}
 
-			OS::get_singleton()->set_ime_active(true);
+			DisplayDriver::get_singleton()->set_ime_active(true);
 			Point2 cursor_pos = Point2(cursor_get_column(), cursor_get_line()) * get_row_height();
 			DisplayDriver::get_singleton()->set_ime_position(get_global_position() + cursor_pos);
 			DisplayDriver::get_singleton()->set_ime_intermediate_text_callback(_ime_text_callback, this);

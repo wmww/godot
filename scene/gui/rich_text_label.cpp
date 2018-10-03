@@ -32,6 +32,7 @@
 
 #include "core/os/keyboard.h"
 #include "core/os/os.h"
+#include "core/os/displaydriver.h"
 #include "scene/scene_string_names.h"
 
 #ifdef TOOLS_ENABLED

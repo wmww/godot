@@ -42,7 +42,7 @@
 // #include "drivers/pulseaudio/audio_driver_pulseaudio.h"
 #include "joypad_linux.h"
 #include "main/input_default.h"
-#include "os/input.h"
+#include "core/os/input.h"
 #include "power_x11.h"
 #include "servers/visual/rasterizer.h"
 #include "servers/visual_server.h"
@@ -177,23 +177,13 @@ class Display_X11 : public DisplayDriver {
 // 	AudioDriverPulseAudio driver_pulseaudio;
 // #endif
 
-	PowerX11 *power_manager;
-
-<<<<<<< HEAD:platform/freedesktop/os_x11.h
 	bool layered_window;
-
-	CrashHandler crash_handler;
-
-	int video_driver_index;
-=======
-// 	bool layered_window;
 //
 // 	CrashHandler crash_handler;
 //
-// 	int video_driver_index;
+ 	int video_driver_index;
 	int audio_driver_index;
 	unsigned int capture_idle;
->>>>>>> b3d999cd0... Split OS and Display classes:platform/freedesktop/display_x11.h
 	bool maximized;
 	//void set_wm_border(bool p_enabled);
 	void set_wm_fullscreen(bool p_enabled);
@@ -244,6 +234,8 @@ public:
 	virtual void set_clipboard(const String &p_text);
 	virtual String get_clipboard() const;
 
+	virtual bool has_touchscreen_ui_hint() const;
+
 	virtual void release_rendering_thread();
 	virtual void make_rendering_thread();
 	virtual void swap_buffers();
@@ -291,7 +283,7 @@ public:
 	virtual String get_joy_guid(int p_device) const;
 
 	virtual void _set_use_vsync(bool p_enable);
-	//virtual bool is_vsync_enabled() const;
+	virtual bool is_vsync_enabled() const;
 
 	virtual void force_process_input();
 

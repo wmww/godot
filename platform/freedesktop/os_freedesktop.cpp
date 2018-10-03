@@ -29,11 +29,11 @@
 /*************************************************************************/
 
 #include "os_freedesktop.h"
-#include "os/displaydriver.h"
+#include "core/os/displaydriver.h"
 
 #include "errno.h"
 #include "key_mapping_x11.h"
-#include "print_string.h"
+#include "core/print_string.h"
 
 #ifdef HAVE_MNTENT
 #include <mntent.h>

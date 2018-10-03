@@ -33,11 +33,11 @@
 
 #include "os.h"
 
-#include "engine.h"
-#include "image.h"
-#include "list.h"
-#include "ustring.h"
-#include "vector.h"
+#include "core/engine.h"
+#include "core/image.h"
+#include "core/list.h"
+#include "core/ustring.h"
+#include "core/vector.h"
 
 /**
 	@author Juan Linietsky <reduzio@gmail.com>
@@ -51,6 +51,7 @@ class DisplayDriver {
 	bool _no_window;
 	int _orientation;
 	bool _allow_hidpi;
+	bool _allow_layered;
 	bool _use_vsync;
 
 public:
@@ -72,6 +73,8 @@ public:
 		bool maximized;
 		bool always_on_top;
 		bool use_vsync;
+		bool layered_splash;
+		bool layered;
 		float get_aspect() const { return (float)width / (float)height; }
 		VideoMode(int p_width = 1024, int p_height = 600, bool p_fullscreen = false, bool p_resizable = true, bool p_borderless_window = false, bool p_maximized = false, bool p_always_on_top = false, bool p_use_vsync = false) {
 			width = p_width;
@@ -82,6 +85,8 @@ public:
 			maximized = p_maximized;
 			always_on_top = p_always_on_top;
 			use_vsync = p_use_vsync;
+			layered = false;
+			layered_splash = false;
 		}
 	};
 
@@ -90,12 +95,12 @@ protected:
 
 	RenderThreadMode _render_thread_mode;
 
-	virtual int get_video_driver_count() const = 0;
-	virtual const char *get_video_driver_name(int p_driver) const = 0;
-
 	// functions used by main to initialize/deintialize the OS
 	virtual Error initialize(const VideoMode &p_desired, int p_video_driver) = 0;
 	virtual void finalize() = 0;
+
+	virtual void set_main_loop(MainLoop *p_main_loop) = 0;
+	virtual void delete_main_loop() = 0;
 
 public:
 	static DisplayDriver *get_singleton();
@@ -107,7 +112,7 @@ public:
 		MOUSE_MODE_CONFINED
 	};
 
-	virtual void set_main_loop(MainLoop *p_main_loop) = 0;
+	virtual MainLoop *get_main_loop() const = 0;
 
 	virtual void set_mouse_mode(MouseMode p_mode);
 	virtual MouseMode get_mouse_mode() const;
@@ -147,10 +152,19 @@ public:
 	virtual bool is_window_always_on_top() const { return false; }
 	virtual void request_attention() {}
 	virtual void center_window();
+	virtual Rect2 get_window_safe_area() const;
 
 	virtual void set_borderless_window(bool p_borderless) {}
 	virtual bool get_borderless_window() { return 0; }
 
+	virtual bool get_window_per_pixel_transparency_enabled() const = 0;
+	virtual void set_window_per_pixel_transparency_enabled(bool p_enabled) = 0;
+
+	virtual int get_video_driver_count() const = 0;
+	virtual const char *get_video_driver_name(int p_driver) const = 0;
+	virtual int get_current_video_driver() const = 0;
+
+	virtual void set_ime_active(const bool p_active) {}
 	virtual void set_ime_position(const Point2 &p_pos) {}
 	virtual void set_ime_intermediate_text_callback(ImeCallback p_callback, void *p_inp) {}
 
@@ -260,6 +274,7 @@ public:
 	bool has_feature(const String &p_feature);
 
 	bool is_hidpi_allowed() const { return _allow_hidpi; }
+	bool is_layered_allowed() const { return _allow_layered; }
 
 	enum EngineContext {
 		CONTEXT_EDITOR,
@@ -274,105 +289,3 @@ public:
 };
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-enum MouseMode {
-		MOUSE_MODE_VISIBLE,
-		MOUSE_MODE_HIDDEN,
-		MOUSE_MODE_CAPTURED,
-		MOUSE_MODE_CONFINED
-	};
-
-	virtual void set_mouse_mode(MouseMode p_mode);
-	virtual MouseMode get_mouse_mode() const;
-
-	virtual void warp_mouse_position(const Point2 &p_to) {}
-	virtual Point2 get_mouse_position() const = 0;
-	virtual int get_mouse_button_state() const = 0;
-	virtual void set_window_title(const String &p_title) = 0;
-
-	virtual void set_clipboard(const String &p_text);
-	virtual String get_clipboard() const;
-
-	virtual void set_video_mode(const VideoMode &p_video_mode, int p_screen = 0) = 0;
-	virtual VideoMode get_video_mode(int p_screen = 0) const = 0;
-	virtual void get_fullscreen_mode_list(List<VideoMode> *p_list, int p_screen = 0) const = 0;
-
-	virtual int get_video_driver_count() const;
-	virtual const char *get_video_driver_name(int p_driver) const;
-	virtual int get_current_video_driver() const = 0;
-	virtual int get_audio_driver_count() const;
-	virtual const char *get_audio_driver_name(int p_driver) const;
-
-	virtual PoolStringArray get_connected_midi_inputs();
-	virtual void open_midi_inputs();
-	virtual void close_midi_inputs();
-
-	virtual int get_screen_count() const { return 1; }
-	virtual int get_current_screen() const { return 0; }
-	virtual void set_current_screen(int p_screen) {}
-	virtual Point2 get_screen_position(int p_screen = -1) const { return Point2(); }
-	virtual Size2 get_screen_size(int p_screen = -1) const { return get_window_size(); }
-	virtual int get_screen_dpi(int p_screen = -1) const { return 72; }
-	virtual Point2 get_window_position() const { return Vector2(); }
-	virtual void set_window_position(const Point2 &p_position) {}
-	virtual Size2 get_window_size() const = 0;
-	virtual Size2 get_real_window_size() const { return get_window_size(); }
-	virtual void set_window_size(const Size2 p_size) {}
-	virtual void set_window_fullscreen(bool p_enabled) {}
-	virtual bool is_window_fullscreen() const { return true; }
-	virtual void set_window_resizable(bool p_enabled) {}
-	virtual bool is_window_resizable() const { return false; }
-	virtual void set_window_minimized(bool p_enabled) {}
-	virtual bool is_window_minimized() const { return false; }
-	virtual void set_window_maximized(bool p_enabled) {}
-	virtual bool is_window_maximized() const { return true; }
-	virtual void set_window_always_on_top(bool p_enabled) {}
-	virtual bool is_window_always_on_top() const { return false; }
-	virtual void request_attention() {}
-	virtual void center_window();
-
-	// Returns window area free of hardware controls and other obstacles.
-	// The application should use this to determine where to place UI elements.
-	//
-	// Keep in mind the area returned is in window coordinates rather than
-	// viewport coordinates - you should perform the conversion on your own.
-	//
-	// The maximum size of the area is Rect2(0, 0, window_size.width, window_size.height).
-	virtual Rect2 get_window_safe_area() const {
-		Size2 window_size = get_window_size();
-		return Rect2(0, 0, window_size.width, window_size.height);
-	}
-
-	virtual void set_borderless_window(bool p_borderless) {}
-	virtual bool get_borderless_window() { return 0; }
-
-	virtual bool get_window_per_pixel_transparency_enabled() const { return false; }
-	virtual void set_window_per_pixel_transparency_enabled(bool p_enabled) {}
-
-	virtual uint8_t *get_layered_buffer_data() { return NULL; }
-	virtual Size2 get_layered_buffer_size() { return Size2(0, 0); }
-	virtual void swap_layered_buffer() {}
-
-	virtual void set_ime_active(const bool p_active) {}
-	virtual void set_ime_position(const Point2 &p_pos) {}
-	virtual void set_ime_intermediate_text_callback(ImeCallback p_callback, void *p_inp) {}

@@ -29,7 +29,6 @@
 /*************************************************************************/
 
 #include "mobile_vr_interface.h"
-#include "mobile_interface.h"
 #include "core/os/displaydriver.h"
 #include "core/os/input.h"
 #include "core/os/os.h"

@@ -287,7 +287,7 @@ void RasterizerGLES3::set_boot_image(const Ref<Image> &p_image, const Color &p_c
 	glViewport(0, 0, window_w, window_h);
 	glDisable(GL_BLEND);
 	glDepthMask(GL_FALSE);
-	if (OS::get_singleton()->get_window_per_pixel_transparency_enabled()) {
+	if (DisplayDriver::get_singleton()->get_window_per_pixel_transparency_enabled()) {
 		glClearColor(0.0, 0.0, 0.0, 0.0);
 	} else {
 		glClearColor(p_color.r, p_color.g, p_color.b, 1.0);
@@ -386,8 +386,8 @@ void RasterizerGLES3::output_lens_distorted_to_screen(RID p_render_target, const
 
 void RasterizerGLES3::end_frame(bool p_swap_buffers) {
 
-	if (OS::get_singleton()->is_layered_allowed()) {
-		if (OS::get_singleton()->get_window_per_pixel_transparency_enabled()) {
+	if (DisplayDriver::get_singleton()->is_layered_allowed()) {
+		if (DisplayDriver::get_singleton()->get_window_per_pixel_transparency_enabled()) {
 #if (defined WINDOWS_ENABLED) && !(defined UWP_ENABLED)
 			Size2 wndsize = OS::get_singleton()->get_layered_buffer_size();
 			uint8_t *data = OS::get_singleton()->get_layered_buffer_data();

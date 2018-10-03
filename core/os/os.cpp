@@ -37,6 +37,7 @@
 #include "core/project_settings.h"
 #include "core/version_generated.gen.h"
 #include "servers/audio_server.h"
+#include "core/os/displaydriver.h"
 
 #include <stdarg.h>
 
@@ -367,12 +368,6 @@ Error OS::set_cwd(const String &p_cwd) {
 	return ERR_CANT_OPEN;
 }
 
-bool OS::has_touchscreen_ui_hint() const {
-
-	//return false;
-	return Input::get_singleton() && Input::get_singleton()->is_emulating_touch_from_mouse();
-}
-
 int OS::get_free_static_memory() const {
 
 	return Memory::get_mem_available();
@@ -403,6 +398,10 @@ void OS::_ensure_user_data_dir() {
 String OS::get_model_name() const {
 
 	return "GenericDevice";
+}
+
+MainLoop *OS::get_main_loop() const {
+	return DisplayDriver::get_singleton()->get_main_loop();
 }
 
 void OS::set_cmdline(const char *p_execpath, const List<String> &p_args) {
@@ -589,12 +588,9 @@ OS::OS() {
 	low_processor_usage_mode_sleep_usec = 10000;
 	_verbose_stdout = false;
 	_exit_code = 0;
-	_orientation = SCREEN_LANDSCAPE;
 
 	_render_thread_mode = RENDER_THREAD_SAFE;
 
-	_allow_hidpi = false;
-	_allow_layered = false;
 	_stack_bottom = (void *)(&stack_bottom);
 
 	_logger = NULL;

@@ -124,7 +124,7 @@ Error ContextGL_X11::initialize() {
 	swa.border_pixel = 0;
 	unsigned long valuemask = CWBorderPixel | CWColormap | CWEventMask;
 
-	if (OS::get_singleton()->is_layered_allowed()) {
+	if (DisplayDriver::get_singleton()->is_layered_allowed()) {
 		GLXFBConfig *fbc = glXChooseFBConfig(x11_display, DefaultScreen(x11_display), visual_attribs_layered, &fbcount);
 		ERR_FAIL_COND_V(!fbc, ERR_UNCONFIGURED);
 
@@ -198,7 +198,7 @@ Error ContextGL_X11::initialize() {
 	}
 
 	swa.colormap = XCreateColormap(x11_display, RootWindow(x11_display, vi->screen), vi->visual, AllocNone);
-	x11_window = XCreateWindow(x11_display, RootWindow(x11_display, vi->screen), 0, 0, OS::get_singleton()->get_video_mode().width, OS::get_singleton()->get_video_mode().height, 0, vi->depth, InputOutput, vi->visual, valuemask, &swa);
+	x11_window = XCreateWindow(x11_display, RootWindow(x11_display, vi->screen), 0, 0, DisplayDriver::get_singleton()->get_video_mode().width, DisplayDriver::get_singleton()->get_video_mode().height, 0, vi->depth, InputOutput, vi->visual, valuemask, &swa);
 
 	ERR_FAIL_COND_V(!x11_window, ERR_UNCONFIGURED);
 	set_class_hint(x11_display, x11_window);

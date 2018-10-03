@@ -61,10 +61,6 @@ class OS {
 	bool _verbose_stdout;
 	uint64_t _msec_splash;
 	int _exit_code;
-	int _orientation;
-	bool _allow_hidpi;
-	bool _allow_layered;
-	bool _use_vsync;
 	char *last_error;
 
 	void *_stack_bottom;
@@ -94,52 +90,18 @@ public:
 		RENDER_THREAD_SAFE,
 		RENDER_SEPARATE_THREAD
 	};
-	// struct VideoMode {
-
-	// 	int width, height;
-	// 	bool fullscreen;
-	// 	bool resizable;
-	// 	bool borderless_window;
-	// 	bool maximized;
-	// 	bool always_on_top;
-	// 	bool use_vsync;
-	// 	bool layered_splash;
-	// 	bool layered;
-	// 	float get_aspect() const { return (float)width / (float)height; }
-	// 	VideoMode(int p_width = 1024, int p_height = 600, bool p_fullscreen = false, bool p_resizable = true, bool p_borderless_window = false, bool p_maximized = false, bool p_always_on_top = false, bool p_use_vsync = false) {
-	// 		width = p_width;
-	// 		height = p_height;
-	// 		fullscreen = p_fullscreen;
-	// 		resizable = p_resizable;
-	// 		borderless_window = p_borderless_window;
-	// 		maximized = p_maximized;
-	// 		always_on_top = p_always_on_top;
-	// 		use_vsync = p_use_vsync;
-	// 		layered = false;
-	// 		layered_splash = false;
-	// 	}
-	// };
 
 protected:
 	friend class Main;
 
 	RenderThreadMode _render_thread_mode;
 
-	// functions used by main to initialize/deinitialize the OS
 protected:
 	friend class Main;
 
 	// functions used by main to initialize/deintialize the OS
-	virtual int get_audio_driver_count() const = 0;
-	virtual const char *get_audio_driver_name(int p_driver) const = 0;
-
-	void add_logger(Logger *p_logger);
-
 	virtual void initialize_core() = 0;
 	virtual Error initialize(int p_audio_driver) = 0;
-
-	virtual void set_main_loop(MainLoop *p_main_loop) = 0;
-	virtual void delete_main_loop() = 0;
 
 	virtual void finalize() = 0;
 	virtual void finalize_core() = 0;
@@ -187,15 +149,14 @@ public:
 	// virtual VideoMode get_video_mode(int p_screen = 0) const = 0;
 	// virtual void get_fullscreen_mode_list(List<VideoMode> *p_list, int p_screen = 0) const = 0;
 
-	// virtual int get_video_driver_count() const;
-	// virtual const char *get_video_driver_name(int p_driver) const;
-	// virtual int get_current_video_driver() const = 0;
 	virtual int get_audio_driver_count() const;
 	virtual const char *get_audio_driver_name(int p_driver) const;
 
 	virtual PoolStringArray get_connected_midi_inputs();
 	virtual void open_midi_inputs();
 	virtual void close_midi_inputs();
+
+	void add_logger(Logger *p_logger);
 
 	// virtual int get_screen_count() const { return 1; }
 	// virtual int get_current_screen() const { return 0; }
@@ -228,10 +189,6 @@ public:
 	// viewport coordinates - you should perform the conversion on your own.
 	//
 	// The maximum size of the area is Rect2(0, 0, window_size.width, window_size.height).
-	// virtual Rect2 get_window_safe_area() const {
-	// 	Size2 window_size = get_window_size();
-	// 	return Rect2(0, 0, window_size.width, window_size.height);
-	// }
 
 	// virtual void set_borderless_window(bool p_borderless) {}
 	// virtual bool get_borderless_window() { return 0; }
@@ -271,7 +228,7 @@ public:
 	virtual List<String> get_cmdline_args() const { return _cmdline; }
 	virtual String get_model_name() const;
 
-	virtual MainLoop *get_main_loop() const = 0;
+	MainLoop *get_main_loop() const;
 
 	virtual void yield();
 
@@ -400,9 +357,6 @@ public:
 
 	virtual void force_process_input(){};
 	bool has_feature(const String &p_feature);
-
-	bool is_layered_allowed() const { return _allow_layered; }
-	bool is_hidpi_allowed() const { return _allow_hidpi; }
 
 	void set_restart_on_exit(bool p_restart, const List<String> &p_restart_arguments);
 	bool is_restart_on_exit_set() const;

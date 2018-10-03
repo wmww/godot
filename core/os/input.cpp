@@ -35,7 +35,7 @@
 #include "core/project_settings.h"
 #include "core/os/displaydriver.h"
 
-#include "project_settings.h"
+#include "core/project_settings.h"
 Input *Input::singleton = NULL;
 
 Input *Input::get_singleton() {

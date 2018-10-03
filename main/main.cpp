@@ -912,10 +912,10 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 		DisplayDriver::get_singleton()->_allow_hidpi = GLOBAL_DEF("display/window/dpi/allow_hidpi", false);
 	}
 
-	OS::get_singleton()->_allow_layered = GLOBAL_DEF("display/window/allow_per_pixel_transparency", false);
+	DisplayDriver::get_singleton()->_allow_layered = GLOBAL_DEF("display/window/allow_per_pixel_transparency", false);
 
 	video_mode.use_vsync = GLOBAL_DEF("display/window/vsync/use_vsync", true);
-	OS::get_singleton()->_use_vsync = video_mode.use_vsync;
+	DisplayDriver::get_singleton()->_use_vsync = video_mode.use_vsync;
 
 	video_mode.layered = GLOBAL_DEF("display/window/per_pixel_transparency", false);
 	video_mode.layered_splash = GLOBAL_DEF("display/window/per_pixel_transparency_splash", false);
@@ -1076,6 +1076,10 @@ Error Main::setup2(Thread::ID p_main_tid_override) {
 	}
 
 	Error err;
+	err = OS::get_singleton()->initialize(audio_driver_idx);
+	if (err != OK) {
+		return err;
+	}
 	err = DisplayDriver::get_singleton()->initialize(video_mode, video_driver_idx);
 	if (err != OK) {
 		return err;
@@ -1758,7 +1762,6 @@ bool Main::start() {
 		DisplayDriver::get_singleton()->set_icon(icon);
 	}
 
-	OS::get_singleton()->set_main_loop(main_loop);
 	DisplayDriver::get_singleton()->set_main_loop(main_loop);
 
 	return true;
@@ -1972,7 +1975,7 @@ void Main::cleanup() {
 		memdelete(script_debugger);
 	}
 
-	OS::get_singleton()->delete_main_loop();
+	DisplayDriver::get_singleton()->delete_main_loop();
 
 	OS::get_singleton()->_cmdline.clear();
 	OS::get_singleton()->_execpath = "";

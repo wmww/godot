@@ -85,6 +85,11 @@ void Display_X11::set_main_loop(MainLoop *p_main_loop) {
 	input->set_main_loop(p_main_loop);
 }
 
+void Display_X11::delete_main_loop() {
+
+	memdelete(main_loop);
+}
+
 int Display_X11::get_video_driver_count() const {
 	return 2;
 }
@@ -102,9 +107,6 @@ const char *Display_X11::get_video_driver_name(int p_driver) const {
 
 void Display_X11::initialize_core() {
 
-	crash_handler.initialize();
-
-	OS_Unix::initialize_core();
 }
 
 Error Display_X11::initialize(const VideoMode &p_desired, int p_video_driver) {
@@ -576,7 +578,7 @@ Error Display_X11::initialize(const VideoMode &p_desired, int p_video_driver) {
 
 	visual_server->init();
 
-	AudioDriverManager::initialize(p_audio_driver);
+// 	AudioDriverManager::initialize(p_audio_driver);
 
 	input = memnew(InputDefault);
 
@@ -584,8 +586,6 @@ Error Display_X11::initialize(const VideoMode &p_desired, int p_video_driver) {
 #ifdef JOYDEV_ENABLED
 	joypad = memnew(JoypadLinux(input));
 #endif
-
-	power_manager = memnew(PowerX11);
 
 	if (p_desired.layered_splash) {
 		set_window_per_pixel_transparency_enabled(true);
@@ -654,9 +654,9 @@ void Display_X11::finalize() {
 		memdelete(debugger_connection_console);
 	}
 	*/
-#ifdef ALSAMIDI_ENABLED
-	driver_alsamidi.close();
-#endif
+// #ifdef ALSAMIDI_ENABLED
+// 	driver_alsamidi.close();
+// #endif
 
 #ifdef JOYDEV_ENABLED
 	memdelete(joypad);
@@ -670,8 +670,6 @@ void Display_X11::finalize() {
 	visual_server->finish();
 	memdelete(visual_server);
 	//memdelete(rasterizer);
-
-	memdelete(power_manager);
 
 	if (xrandr_handle)
 		dlclose(xrandr_handle);
@@ -2505,6 +2503,12 @@ void Display_X11::set_custom_mouse_cursor(const RES &p_cursor, CursorShape p_sha
 	}
 }
 
+bool Display_X11::has_touchscreen_ui_hint() const {
+
+	return Input::get_singleton() && Input::get_singleton()->is_emulating_touch_from_mouse();
+}
+
+
 void Display_X11::release_rendering_thread() {
 
 #if defined(OPENGL_ENABLED)
@@ -2529,7 +2533,7 @@ void Display_X11::swap_buffers() {
 void Display_X11::alert(const String &p_alert, const String &p_title) {
 	const char *message_programs[] = { "zenity", "kdialog", "Xdialog", "xmessage" };
 
-	String path = get_environment("PATH");
+	String path = OS::get_singleton()->get_environment("PATH");
 	Vector<String> path_elems = path.split(":", false);
 	String program;
 
@@ -2690,38 +2694,16 @@ void Display_X11::_set_use_vsync(bool p_enable) {
 		context_gl->set_use_vsync(p_enable);
 #endif
 }
-/*
-bool OS_X11::is_vsync_enabled() const {
+
+bool Display_X11::is_vsync_enabled() const {
 
 	if (context_gl)
 		return context_gl->is_using_vsync();
 
 	return true;
 }
-*/
 
-<<<<<<< HEAD:platform/freedesktop/os_x11.cpp
-
-OS::PowerState OS_X11::get_power_state() {
-	return power_manager->get_power_state();
-}
-
-int OS_X11::get_power_seconds_left() {
-	return power_manager->get_power_seconds_left();
-}
-
-int OS_X11::get_power_percent_left() {
-	return power_manager->get_power_percent_left();
-}
-
-void OS_X11::disable_crash_handler() {
-	crash_handler.disable();
-}
-
-bool OS_X11::is_disable_crash_handler() const {
-	return crash_handler.is_disabled();
-}
-
+/*
 static String get_mountpoint(const String &p_path) {
 	struct stat s;
 	if (stat(p_path.utf8().get_data(), &s)) {
@@ -2749,6 +2731,7 @@ static String get_mountpoint(const String &p_path) {
 #endif
 	return "";
 }
+*/
 
 DisplayDriver::LatinKeyboardVariant Display_X11::get_latin_keyboard_variant() const {
 

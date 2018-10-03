@@ -38,6 +38,7 @@
 #include "core/os/keyboard.h"
 #include "core/os/os.h"
 #include "core/project_settings.h"
+#include "core/os/displaydriver.h"
 
 #include "thirdparty/misc/base64.h"
 
@@ -221,11 +222,11 @@ String _OS::get_clipboard() const {
 }
 
 int _OS::get_video_driver_count() const {
-	return OS::get_singleton()->get_video_driver_count();
+	return DisplayDriver::get_singleton()->get_video_driver_count();
 }
 
 String _OS::get_video_driver_name(int p_driver) const {
-	return OS::get_singleton()->get_video_driver_name(p_driver);
+	return DisplayDriver::get_singleton()->get_video_driver_name(p_driver);
 }
 
 int _OS::get_audio_driver_count() const {
@@ -318,7 +319,7 @@ void _OS::set_window_size(const Size2 &p_size) {
 }
 
 Rect2 _OS::get_window_safe_area() const {
-	return OS::get_singleton()->get_window_safe_area();
+	return DisplayDriver::get_singleton()->get_window_safe_area();
 }
 
 void _OS::set_window_fullscreen(bool p_enabled) {
@@ -366,11 +367,11 @@ void _OS::set_borderless_window(bool p_borderless) {
 }
 
 bool _OS::get_window_per_pixel_transparency_enabled() const {
-	return OS::get_singleton()->get_window_per_pixel_transparency_enabled();
+	return DisplayDriver::get_singleton()->get_window_per_pixel_transparency_enabled();
 }
 
 void _OS::set_window_per_pixel_transparency_enabled(bool p_enabled) {
-	OS::get_singleton()->set_window_per_pixel_transparency_enabled(p_enabled);
+	DisplayDriver::get_singleton()->set_window_per_pixel_transparency_enabled(p_enabled);
 }
 
 bool _OS::get_borderless_window() const {
@@ -379,7 +380,7 @@ bool _OS::get_borderless_window() const {
 
 void _OS::set_ime_active(const bool p_active) {
 
-	return OS::get_singleton()->set_ime_active(p_active);
+	return DisplayDriver::get_singleton()->set_ime_active(p_active);
 }
 
 void _OS::set_ime_position(const Point2 &p_pos) {

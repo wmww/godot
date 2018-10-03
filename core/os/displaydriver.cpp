@@ -29,10 +29,9 @@
 /*************************************************************************/
 
 #include "os.h"
-#include "os/displaydriver.h"
+#include "core/os/displaydriver.h"
 
 #include "input.h"
-#include "version_generated.gen.h"
 
 DisplayDriver *DisplayDriver::singleton = NULL;
 
@@ -127,7 +126,7 @@ Error DisplayDriver::dialog_input_text(String p_title, String p_description, Str
 bool DisplayDriver::has_touchscreen_ui_hint() const {
 
 	//return false;
-	return Input::get_singleton() && Input::get_singleton()->is_emulating_touchscreen();
+	return Input::get_singleton() && Input::get_singleton()->is_emulating_touch_from_mouse();
 }
 
 void DisplayDriver::set_screen_orientation(ScreenOrientation p_orientation) {
@@ -222,6 +221,11 @@ void DisplayDriver::center_window() {
 	set_window_position(Vector2(x, y));
 }
 
+Rect2 DisplayDriver::get_window_safe_area() const {
+	Size2 window_size = get_window_size();
+	return Rect2(0, 0, window_size.width, window_size.height);
+}
+
 void DisplayDriver::set_context(int p_context) {
 }
 
@@ -237,6 +241,8 @@ DisplayDriver::DisplayDriver() {
 	_render_thread_mode = RENDER_THREAD_SAFE;
 
 	_allow_hidpi = false;
+	_allow_layered = false;
+	_use_vsync = false;
 }
 
 DisplayDriver::~DisplayDriver() {
