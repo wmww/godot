@@ -2006,6 +2006,7 @@ void Main::cleanup() {
 		memdelete(audio_server);
 	}
 
+	DisplayDriver::get_singleton()->finalize();
 	OS::get_singleton()->finalize();
 	finalize_physics();
 

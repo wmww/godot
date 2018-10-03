@@ -87,7 +87,9 @@ void Display_X11::set_main_loop(MainLoop *p_main_loop) {
 
 void Display_X11::delete_main_loop() {
 
-	memdelete(main_loop);
+	if (main_loop)
+		memdelete(main_loop);
+	main_loop = NULL;
 }
 
 int Display_X11::get_video_driver_count() const {
@@ -645,18 +647,7 @@ void Display_X11::set_ime_position(const Point2 &p_pos) {
 
 void Display_X11::finalize() {
 
-	if (main_loop)
-		memdelete(main_loop);
-	main_loop = NULL;
-
-	/*
-	if (debugger_connection_console) {
-		memdelete(debugger_connection_console);
-	}
-	*/
-// #ifdef ALSAMIDI_ENABLED
-// 	driver_alsamidi.close();
-// #endif
+	delete_main_loop();
 
 #ifdef JOYDEV_ENABLED
 	memdelete(joypad);

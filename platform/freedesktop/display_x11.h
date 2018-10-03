@@ -32,21 +32,12 @@
 #define OS_X11_H
 
 #include "context_gl_x11.h"
-// #include "core/os/input.h"
-// #include "crash_handler_x11.h"
-// #include "drivers/unix/os_unix.h"
-// #include "servers/visual_server.h"
-// //#include "servers/visual/visual_server_wrap_mt.h"
-// #include "drivers/alsa/audio_driver_alsa.h"
-// #include "drivers/alsamidi/alsa_midi.h"
-// #include "drivers/pulseaudio/audio_driver_pulseaudio.h"
 #include "joypad_linux.h"
 #include "main/input_default.h"
 #include "core/os/input.h"
 #include "power_x11.h"
 #include "servers/visual/rasterizer.h"
 #include "servers/visual_server.h"
-//#include "servers/visual/visual_server_wrap_mt.h"
 
 #include <X11/Xcursor/Xcursor.h>
 #include <X11/Xlib.h>

@@ -76,7 +76,6 @@ void OS_Freedesktop::initialize_core() {
 
 Error OS_Freedesktop::initialize(int p_audio_driver) {
 	args = OS::get_singleton()->get_cmdline_args();
-	main_loop = NULL;
 	last_timestamp = 0;
 
 	AudioDriverManager::initialize(p_audio_driver);
@@ -105,34 +104,7 @@ String OS_Freedesktop::get_unique_id() const {
 
 void OS_Freedesktop::finalize() {
 
-	if (main_loop)
-		memdelete(main_loop);
-	main_loop = NULL;
-
-	/*
-	if (debugger_connection_console) {
-		memdelete(debugger_connection_console);
-	}
-	*/
-
 	args.clear();
-}
-
-MainLoop *OS_Freedesktop::get_main_loop() const {
-
-	return main_loop;
-}
-
-void OS_Freedesktop::delete_main_loop() {
-
-	if (main_loop)
-		memdelete(main_loop);
-	main_loop = NULL;
-}
-
-void OS_Freedesktop::set_main_loop(MainLoop *p_main_loop) {
-
-	main_loop = p_main_loop;
 }
 
 String OS_Freedesktop::get_name() {
@@ -262,6 +234,8 @@ void OS_Freedesktop::alert(const String &p_alert, const String &p_title) {
 void OS_Freedesktop::run() {
 
 	force_quit = false;
+
+	MainLoop *main_loop = get_main_loop();
 
 	if (!main_loop)
 		return;

@@ -35,7 +35,6 @@
 #include "drivers/alsa/audio_driver_alsa.h"
 #include "drivers/pulseaudio/audio_driver_pulseaudio.h"
 #include "drivers/unix/os_unix.h"
-#include "core/os/input.h"
 #include "power_x11.h"
 #include "servers/audio_server.h"
 /**
@@ -45,12 +44,10 @@
 class OS_Freedesktop : public OS_Unix {
 
 	List<String> args;
-	MainLoop *main_loop;
 	char *xmbstring;
 	int xmblen;
 	unsigned long last_timestamp;
 
-	virtual void delete_main_loop();
 	IP_Unix *ip_unix;
 
 	bool force_quit;
@@ -81,12 +78,8 @@ protected:
 	virtual Error initialize(int p_audio_driver);
 	virtual void finalize();
 
-	virtual void set_main_loop(MainLoop *p_main_loop);
-
 public:
 	virtual String get_name();
-
-	virtual MainLoop *get_main_loop() const;
 
 	virtual String get_config_path() const;
 	virtual String get_data_path() const;
