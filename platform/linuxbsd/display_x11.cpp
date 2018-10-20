@@ -87,7 +87,7 @@ int DisplayX11::get_current_video_driver() const {
 	return video_driver_index;
 }
 
-Error DisplayX11::initialize(const VideoMode &p_desired, int p_video_driver) {
+Error DisplayX11::initialize_display(const VideoMode &p_desired, int p_video_driver) {
 
 	long im_event_mask = 0;
 	last_button_state = 0;
@@ -727,7 +727,7 @@ void DisplayX11::set_ime_position(const Point2 &p_pos) {
 	XFree(preedit_attr);
 }
 
-void DisplayX11::finalize() {
+void DisplayX11::finalize_display() {
 
 	if (main_loop)
 		memdelete(main_loop);

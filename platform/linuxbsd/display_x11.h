@@ -181,8 +181,8 @@ class DisplayX11 : public DisplayDriver {
 protected:
 	virtual int get_current_video_driver() const;
 
-	virtual Error initialize(const VideoMode &p_desired, int p_video_driver);
-	virtual void finalize();
+	virtual Error initialize_display(const VideoMode &p_desired, int p_video_driver);
+	virtual void finalize_display();
 
 	void _window_changed(XEvent *event);
 

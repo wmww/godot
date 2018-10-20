@@ -74,7 +74,7 @@ void OS_LinuxBSD::initialize_core() {
 	OS_Unix::initialize_core();
 }
 
-Error OS_LinuxBSD::initialize(int p_audio_driver) {
+Error OS_LinuxBSD::initialize_os(int p_audio_driver) {
 	args = OS::get_singleton()->get_cmdline_args();
 	last_timestamp = 0;
 
@@ -101,7 +101,7 @@ String OS_LinuxBSD::get_unique_id() const {
 	return machine_id;
 }
 
-void OS_LinuxBSD::finalize() {
+void OS_LinuxBSD::finalize_os() {
 
 	/*
 	if (debugger_connection_console) {
