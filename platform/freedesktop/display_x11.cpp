@@ -1,31 +1,31 @@
 /*************************************************************************/
-/*  os_x11.cpp							   */
+/*  display_x11.cpp                                                      */
 /*************************************************************************/
-/*		       This file is part of:			   */
-/*			   GODOT ENGINE				*/
-/*		      https://godotengine.org			  */
+/*                       This file is part of:                           */
+/*                           GODOT ENGINE                                */
+/*                      https://godotengine.org                          */
 /*************************************************************************/
-/* Copyright (c) 2007-2018 Juan Linietsky, Ariel Manzur.		 */
+/* Copyright (c) 2007-2018 Juan Linietsky, Ariel Manzur.                 */
 /* Copyright (c) 2014-2018 Godot Engine contributors (cf. AUTHORS.md)    */
-/*								       */
+/*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
 /* "Software"), to deal in the Software without restriction, including   */
 /* without limitation the rights to use, copy, modify, merge, publish,   */
 /* distribute, sublicense, and/or sell copies of the Software, and to    */
 /* permit persons to whom the Software is furnished to do so, subject to */
-/* the following conditions:					     */
-/*								       */
-/* The above copyright notice and this permission notice shall be	*/
+/* the following conditions:                                             */
+/*                                                                       */
+/* The above copyright notice and this permission notice shall be        */
 /* included in all copies or substantial portions of the Software.       */
-/*								       */
+/*                                                                       */
 /* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       */
 /* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF    */
 /* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.*/
 /* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY  */
 /* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,  */
 /* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     */
-/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.		*/
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
 #include "display_x11.h"
@@ -110,7 +110,7 @@ const char *Display_X11::get_video_driver_name(int p_driver) const {
 void Display_X11::initialize_core() {
 }
 
-Error Display_X11::initialize(const VideoMode &p_desired, int p_video_driver) {
+Error Display_X11::initialize_display(const VideoMode &p_desired, int p_video_driver) {
 
 	long im_event_mask = 0;
 	last_button_state = 0;
@@ -644,7 +644,7 @@ void Display_X11::set_ime_position(const Point2 &p_pos) {
 	XFree(preedit_attr);
 }
 
-void Display_X11::finalize() {
+void Display_X11::finalize_display() {
 
 	delete_main_loop();
 
@@ -1894,8 +1894,8 @@ void Display_X11::process_events() {
 							GrabModeAsync, GrabModeAsync, x11_window, None, CurrentTime);
 				}
 #ifdef TOUCH_ENABLED
-					// Grab touch devices to avoid OS gesture interference
-					/*for (int i = 0; i < touch.devices.size(); ++i) {
+				// Grab touch devices to avoid OS gesture interference
+				/*for (int i = 0; i < touch.devices.size(); ++i) {
 					XIGrabDevice(x11_display, touch.devices[i], x11_window, CurrentTime, None, XIGrabModeAsync, XIGrabModeAsync, False, &touch.event_mask);
 				}*/
 #endif
