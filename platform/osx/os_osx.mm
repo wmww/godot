@@ -588,7 +588,7 @@ static const NSRange kEmptyRange = { NSNotFound, 0 };
 
 - (void)cursorUpdate:(NSEvent *)event {
 	DisplayDriver::CursorShape p_shape = OS_OSX::singleton->cursor_shape;
-	OS_OSX::singleton->cursor_shape = OS::CURSOR_MAX;
+	OS_OSX::singleton->cursor_shape = DisplayDriver::CURSOR_MAX;
 	OS_OSX::singleton->set_cursor_shape(p_shape);
 }
 
@@ -725,7 +725,7 @@ static void _mouseDownEvent(NSEvent *event, int index, int mask, bool pressed) {
 		OS_OSX::singleton->input->set_mouse_in_window(true);
 
 	DisplayDriver::CursorShape p_shape = OS_OSX::singleton->cursor_shape;
-	OS_OSX::singleton->cursor_shape = OS::CURSOR_MAX;
+	OS_OSX::singleton->cursor_shape = DisplayDriver::CURSOR_MAX;
 	OS_OSX::singleton->set_cursor_shape(p_shape);
 }
 
@@ -1281,11 +1281,29 @@ int OS_OSX::get_current_video_driver() const {
 	return video_driver_index;
 }
 
-Error OS_OSX::initialize(const VideoMode &p_desired, int p_video_driver, int p_audio_driver) {
+Error OS_OSX::initialize_os(int p_audio_driver) {
 
 	/*** OSX INITIALIZATION ***/
 	/*** OSX INITIALIZATION ***/
 	/*** OSX INITIALIZATION ***/
+
+	AudioDriverManager::initialize(p_audio_driver);
+
+	power_manager = memnew(PowerOSX);
+
+	_ensure_user_data_dir();
+
+	return OK;
+}
+
+void OS_OSX::finalize_os() {
+
+#ifdef COREMIDI_ENABLED
+	midi_driver.close();
+#endif
+}
+
+Error OS_OSX::initialize_display(const VideoMode &p_desired, int p_video_driver) {
 
 	keyboard_layout_dirty = true;
 	displays_arrangement_dirty = true;
@@ -1495,28 +1513,20 @@ Error OS_OSX::initialize(const VideoMode &p_desired, int p_video_driver, int p_a
 	}
 
 	visual_server->init();
-	AudioDriverManager::initialize(p_audio_driver);
 
 	input = memnew(InputDefault);
 	joypad_osx = memnew(JoypadOSX);
-
-	power_manager = memnew(PowerOSX);
-
-	_ensure_user_data_dir();
 
 	restore_rect = Rect2(get_window_position(), get_window_size());
 
 	if (p_desired.layered_splash) {
 		set_window_per_pixel_transparency_enabled(true);
 	}
+
 	return OK;
 }
 
-void OS_OSX::finalize() {
-
-#ifdef COREMIDI_ENABLED
-	midi_driver.close();
-#endif
+void OS_OSX::finalize_display() {
 
 	if (displayLink) {
 		CVDisplayLinkRelease(displayLink);
