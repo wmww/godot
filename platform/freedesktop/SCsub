@@ -12,7 +12,6 @@ common_x11 = [
     "os_freedesktop.cpp",
     "display_x11.cpp",
     "display_wayland.cpp",
-    "test.cpp",
     "key_mapping_x11.cpp",
     "joypad_linux.cpp",
     "power_x11.cpp",

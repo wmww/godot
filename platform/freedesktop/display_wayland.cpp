@@ -63,11 +63,11 @@ void Display_wayland::set_window_title(const String &p_title) {
 void Display_wayland::set_video_mode(const VideoMode &p_video_mode, int p_screen) {
     print_verbose("not implemented (Display_wayland): set_video_mode");
 }
-VideoMode Display_wayland::get_video_mode(int p_screen = 0) const {
+DisplayDriver::VideoMode Display_wayland::get_video_mode(int p_screen) const {
     print_verbose("not implemented (Display_wayland): get_video_mode");
     return VideoMode();
 }
-void Display_wayland::get_fullscreen_mode_list(List<VideoMode> *p_list, int p_screen = 0) const {
+void Display_wayland::get_fullscreen_mode_list(List<VideoMode> *p_list, int p_screen) const {
     print_verbose("not implemented (Display_wayland): get_fullscreen_mode_list");
 }
 Size2 Display_wayland::get_window_size() const {

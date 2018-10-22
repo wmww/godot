@@ -41,13 +41,12 @@
 int main(int argc, char *argv[]) {
 	OS_Freedesktop os;
 	DisplayDriver* display;
-	bool on_wayland = false;
-	bool on_x11 = true;
+	bool on_wayland = true;
 
 	if(on_wayland){
-		*display = Display_wayland();
-	}else if(on_x11) {
-		*display = Display_X11();
+		display = memnew(Display_wayland);
+	}else {
+		display = memnew(Display_X11);
 	}
 
 	setlocale(LC_CTYPE, "");
