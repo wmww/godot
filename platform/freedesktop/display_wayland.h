@@ -27,15 +27,37 @@
 /* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     */
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
-#include "core/os/displaydriver.h"
-
 /**
 	@author Juan Linietsky <reduzio@gmail.com>
 */
+#include "core/os/displaydriver.h"
+#include "core/os/input.h"
+#include "joypad_linux.h"
+#include "main/input_default.h"
+#include "power_x11.h"
+#include "servers/visual/rasterizer.h"
+#include "servers/visual_server.h"
+
+#include <wayland-client.h>
+#include <wayland-server.h>
+#include <wayland-client-protocol.h>
+
+#include "context_egl_wayland.h"
 
 class Display_wayland : public DisplayDriver {
 	private:
 		MainLoop* main_loop;
+		VisualServer *visual_server;
+		VideoMode current_videomode;
+		List<String> args;
+		ContextGL_EGL* context_gl_egl;
+		struct wl_compositor *compositor = NULL;
+		struct wl_surface *surface;
+		struct wl_egl_window *egl_window;
+		struct wl_region *region;
+		struct wl_shell *shell;
+		struct wl_shell_surface *shell_surface;
+
 	protected:
 		Error initialize_display(const VideoMode &p_desired, int p_video_driver);
 		void finalize_display();
