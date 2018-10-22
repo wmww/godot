@@ -37,8 +37,8 @@ class Display_wayland : public DisplayDriver {
 	private:
 		MainLoop* main_loop;
 	protected:
-		Error initialize(const VideoMode &p_desired, int p_video_driver);
-		void finalize();
+		Error initialize_display(const VideoMode &p_desired, int p_video_driver);
+		void finalize_display();
 
 		void set_main_loop(MainLoop *p_main_loop);
 		void delete_main_loop();

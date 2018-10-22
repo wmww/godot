@@ -30,11 +30,11 @@
 
 #include "display_wayland.h"
 
-Error Display_wayland::initialize(const VideoMode &p_desired, int p_video_driver) {
+Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_video_driver) {
     print_verbose("not implemented (Display_wayland): get_mouse_position");
     return Error::OK;
 }
-void Display_wayland::finalize() {
+void Display_wayland::finalize_display() {
     print_verbose("not implemented (Display_wayland): get_mouse_position");
 }
 void Display_wayland::set_main_loop(MainLoop *p_main_loop) {
