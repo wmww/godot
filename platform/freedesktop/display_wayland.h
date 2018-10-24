@@ -61,7 +61,7 @@ private:
 	// struct wl_shell *shell;
 	struct zxdg_shell_v6 *xdg_shell;
 	struct zxdg_surface_v6 *xdg_surface;
-
+	struct zxdg_toplevel_v6 *xdg_toplevel;
 	//wayland listeners
 	const struct wl_registry_listener registry_listener = {
 		&global_registry_handler,
@@ -69,6 +69,23 @@ private:
 	};
 	static void global_registry_handler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version);
 	static void global_registry_remover(void *data, struct wl_registry *wl_registry, uint32_t name);
+
+	const struct zxdg_toplevel_v6_listener xdg_toplevel_listener = {
+		.configure = &xdg_toplevel_configure_handler,
+		.close = &xdg_toplevel_close_handler
+	};
+	static void xdg_toplevel_configure_handler(void *data, struct zxdg_toplevel_v6 *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states);
+	static void xdg_toplevel_close_handler(void *data, struct zxdg_toplevel_v6 *xdg_toplevel);
+
+	const struct zxdg_surface_v6_listener xdg_surface_listener = {
+		.configure = &xdg_surface_configure_handler
+	};
+	static void xdg_surface_configure_handler(void *data, struct zxdg_surface_v6 *xdg_surface, uint32_t serial);
+
+	const struct zxdg_shell_v6_listener xdg_shell_listener = {
+		.ping = &xdg_shell_ping_handler
+	};
+	static void xdg_shell_ping_handler(void *data, struct zxdg_shell_v6 *xdg_shell, uint32_t serial);
 
 protected:
 	Error initialize_display(const VideoMode &p_desired, int p_video_driver);
