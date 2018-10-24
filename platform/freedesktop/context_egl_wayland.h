@@ -44,10 +44,6 @@
 
 #include <EGL/egl.h>
 #include <EGL/eglplatform.h>
-struct ContextGL_EGL_Private {
-    
-	EGLContext egl_context;
-};
 
 class ContextGL_EGL : public ContextGL {
 
@@ -59,16 +55,20 @@ public:
 	};
 
 private:
-	ContextGL_EGL_Private *p;
 	DisplayDriver::VideoMode default_video_mode;
 	//::Colormap x11_colormap;
+
 	/// Native System informations
 	EGLNativeDisplayType native_display;
 	EGLNativeWindowType native_window;
+
 	/// EGL surface
 	EGLSurface egl_surface;
 	/// EGL display
 	EGLDisplay egl_display;
+	/// EGL context
+	EGLContext egl_context;
+
 	//uint16_t window_width, window_height;
 	bool double_buffer;
 	bool direct_render;
@@ -88,9 +88,8 @@ public:
 	virtual void set_use_vsync(bool p_use);
 	virtual bool is_using_vsync() const;
 
-	ContextGL_EGL(EGLNativeDisplayType *p_egl_display, EGLNativeWindowType &p_egl_window, const DisplayDriver::VideoMode &p_default_video_mode, ContextType p_context_type);
+	ContextGL_EGL(EGLNativeDisplayType p_egl_display, EGLNativeWindowType &p_egl_window, const DisplayDriver::VideoMode &p_default_video_mode, ContextType p_context_type);
 	virtual ~ContextGL_EGL();
 };
 
 #endif
-

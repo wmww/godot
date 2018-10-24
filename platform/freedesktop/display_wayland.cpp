@@ -27,23 +27,51 @@
 /* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     */
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.		*/
 /*************************************************************************/
-
 #include "display_wayland.h"
+#include "drivers/gles2/rasterizer_gles2.h"
+#include "drivers/gles3/rasterizer_gles3.h"
+#include "servers/visual/visual_server_raster.h"
+//#include <wayland-client-protocol.h>
+//#include <wayland-client.h>
+// #include <wayland-egl.h> // Wayland EGL MUST be included before EGL headers
+//#include <wayland-server.h>
+#define DISPLAY_WL (Display_wayland *)Display_wayland::get_singleton()
+void Display_wayland::global_registry_handler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version) {
+	Display_wayland *d_wl = DISPLAY_WL;
+
+	printf("Got a registry event for %s id %d\n", interface, id);
+
+	if (strcmp(interface, "wl_compositor") == 0) {
+
+		d_wl->compositor = (wl_compositor *)wl_registry_bind(registry, id, &wl_compositor_interface, 1);
+	}
+
+	// else if (strcmp(interface, "wl_shell") == 0) {
+	//
+	// 	d_wl->shell = (wl_shell *)wl_registry_bind(registry, id, &wl_shell_interface, 1);
+	// }
+
+	else if (strcmp(interface, "zxdg_shell_v6") == 0) {
+
+		d_wl->xdg_shell = (zxdg_shell_v6 *)wl_registry_bind(registry, id, &zxdg_shell_v6_interface, 1);
+	}
+}
+
+void Display_wayland::global_registry_remover(void *data, struct wl_registry *wl_registry, uint32_t name) {
+}
 
 Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_video_driver) {
 
 	// server stuff getten
-	struct wl_display *display = wl_display_connect(NULL);
+	struct wl_display *display = NULL;
+	display = wl_display_connect(NULL);
 	if (display == NULL) {
-		LOG("Can't connect to wayland display !?\n");
+		print_line("Can't connect to wayland display !?\n");
 		exit(1);
 	}
-	LOG("Got a display !");
-
+	print_line("Got a display !");
 	struct wl_registry *wl_registry = wl_display_get_registry(display);
-	wl_registry_add_listener(wl_registry, &listener, NULL);
-
-    //TODO: add the listener struct and callback
+	wl_registry_add_listener(wl_registry, &registry_listener, NULL);
 
 	// This call the attached listener global_registry_handler
 	wl_display_dispatch(display);
@@ -51,11 +79,11 @@ Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_vide
 
 	// If at this point, global_registry_handler didn't set the
 	// compositor, nor the shell, bailout !
-	if (compositor == NULL || shell == NULL) {
-		LOG("No compositor !? No Shell !! There's NOTHING in here !\n");
+	if (compositor == NULL || xdg_shell == NULL) {
+		print_verbose("No compositor !? No Shell !! There's NOTHING in here !\n");
 		exit(1);
 	} else {
-		LOG("Okay, we got a compositor and a shell... That's something !\n");
+		print_verbose("Okay, we got a compositor and a shell... That's something !\n");
 		// ESContext.native_display = display;
 	}
 	// create window
@@ -66,36 +94,132 @@ Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_vide
 	} else
 		print_verbose("Got a compositor surface !\n");
 
-	shell_surface = wl_shell_get_shell_surface(shell, surface);
-	wl_shell_surface_set_toplevel(shell_surface);
+	xdg_surface = zxdg_shell_v6_get_xdg_surface(xdg_shell, surface);
+	// shell_surface = wl_shell_get_shell_surface(shell, surface);
+
+	struct zxdg_toplevel_v6 *xdg_toplevel = zxdg_surface_v6_get_toplevel(xdg_surface);
+	// wl_shell_surface_set_toplevel(shell_surface);
 
 	region = wl_compositor_create_region(compositor);
 
-	wl_region_add(region, 0, 0, width, height);
+	wl_region_add(region, 0, 0, p_desired.width, p_desired.height);
 	wl_surface_set_opaque_region(surface, region);
 
-	struct wl_egl_window *egl_window = wl_egl_window_create(surface, width, height);
+	struct wl_egl_window *egl_window = wl_egl_window_create(surface, p_desired.width, p_desired.height);
 
 	if (egl_window == EGL_NO_SURFACE) {
-		LOG("No window !?\n");
+		print_verbose("No window !?\n");
 		exit(1);
 	} else
-		LOG("Window created !\n");
-    context_gl_egl = memnew(ContextGL_EGL(display, egl_window, p_desired, ContextType p_context_type));
-    context_gl_egl->initialize();
+		print_verbose("Window created !\n");
+	print_verbose("verbose created");
+	EGLNativeDisplayType native_display = (EGLNativeDisplayType)display;
+	EGLNativeWindowType native_window = (EGLNativeWindowType)egl_window;
+	ContextGL_EGL::ContextType context_type = ContextGL_EGL::ContextType::GLES_2_0_COMPATIBLE; //TODO: check for possible context types
+	context_gl_egl = memnew(ContextGL_EGL(native_display, native_window, p_desired, context_type));
+	context_gl_egl->initialize();
+
+	//OPENGL
+	//#if defined(OPENGL_ENABLED)
+
+	// ContextGL_X11::ContextType opengl_api_type = ContextGL_X11::GLES_3_0_COMPATIBLE;
+
+	// if (p_video_driver == VIDEO_DRIVER_GLES2) {
+	// 	opengl_api_type = ContextGL_X11::GLES_2_0_COMPATIBLE;
+	// }
+
+	// bool editor = Engine::get_singleton()->is_editor_hint();
+	// bool gl_initialization_error = false;
+
+	// context_gl = NULL;
+	// while (!context_gl) {
+	// 	context_gl = memnew(ContextGL_X11(x11_display, x11_window, current_videomode, opengl_api_type));
+
+	// 	if (context_gl->initialize() != OK) {
+	// 		memdelete(context_gl);
+	// 		context_gl = NULL;
+
+	// 		if (GLOBAL_GET("rendering/quality/driver/driver_fallback") == "Best" || editor) {
+	// 			if (p_video_driver == VIDEO_DRIVER_GLES2) {
+	// 				gl_initialization_error = true;
+	// 				break;
+	// 			}
+
+	// 			p_video_driver = VIDEO_DRIVER_GLES2;
+	// 			opengl_api_type = ContextGL_X11::GLES_2_0_COMPATIBLE;
+	// 		} else {
+	// 			gl_initialization_error = true;
+	// 			break;
+	// 		}
+	// 	}
+	// }
+
+	// while (true) {
+	// 	if (opengl_api_type == ContextGL_X11::GLES_3_0_COMPATIBLE) {
+	// 		if (RasterizerGLES3::is_viable() == OK) {
+	// 			RasterizerGLES3::register_config();
+	// 			RasterizerGLES3::make_current();
+	// 			break;
+	// 		} else {
+	// 			if (GLOBAL_GET("rendering/quality/driver/driver_fallback") == "Best" || editor) {
+	// 				p_video_driver = VIDEO_DRIVER_GLES2;
+	// 				opengl_api_type = ContextGL_X11::GLES_2_0_COMPATIBLE;
+	// 				continue;
+	// 			} else {
+	// 				gl_initialization_error = true;
+	// 				break;
+	// 			}
+	// 		}
+	// 	}
+
+	// 	if (opengl_api_type == ContextGL_X11::GLES_2_0_COMPATIBLE) {
+	if (RasterizerGLES2::is_viable() == OK) {
+		RasterizerGLES2::register_config();
+		RasterizerGLES2::make_current();
+		//break;
+	} else {
+		//gl_initialization_error = true;
+		//break;
+	}
+	// 	}
+	// }
+
+	// if (gl_initialization_error) {
+	// 	OS::get_singleton()->alert("Your video card driver does not support any of the supported OpenGL versions.\n"
+	// 							   "Please update your drivers or if you have a very old or integrated GPU upgrade it.",
+	// 			"Unable to initialize Video driver");
+	// 	return ERR_UNAVAILABLE;
+	// }
+
+	// video_driver_index = p_video_driver;
+
+	// context_gl->set_use_vsync(current_videomode.use_vsync);
+
+	//#endif
+
+	//VISUAL SERVER
+	visual_server = memnew(VisualServerRaster);
+
+	// if (get_render_thread_mode() != RENDER_THREAD_UNSAFE) {
+
+	// 	visual_server = memnew(VisualServerWrapMT(visual_server, get_render_thread_mode() == RENDER_SEPARATE_THREAD));
+	// }
 	// ESContext.window_width = width;
 	// ESContext.window_height = height;
 	// ESContext.native_window = egl_window;
+
+	//INPUT
+
 	return Error::OK;
 }
 void Display_wayland::finalize_display() {
-	print_verbose("not implemented (Display_wayland): get_mouse_position");
+	print_line("not implemented (Display_wayland): get_mouse_position");
 }
 void Display_wayland::set_main_loop(MainLoop *p_main_loop) {
-	print_verbose("not implemented (Display_wayland): set_main_loop");
+	print_line("not implemented (Display_wayland): set_main_loop");
 }
 void Display_wayland::delete_main_loop() {
-	print_verbose("not implemented (Display_wayland): delete_main_loop");
+	print_line("not implemented (Display_wayland): delete_main_loop");
 }
 
 MainLoop *Display_wayland::get_main_loop() const {
@@ -103,60 +227,60 @@ MainLoop *Display_wayland::get_main_loop() const {
 }
 
 Point2 Display_wayland::get_mouse_position() const {
-	print_verbose("not implemented (Display_wayland): get_mouse_position");
+	print_line("not implemented (Display_wayland): get_mouse_position");
 	return Point2(0, 0);
 }
 int Display_wayland::get_mouse_button_state() const {
-	print_verbose("not implemented (Display_wayland): get_mouse_button_state");
+	print_line("not implemented (Display_wayland): get_mouse_button_state");
 	return 0;
 }
 void Display_wayland::set_window_title(const String &p_title) {
-	print_verbose("not implemented (Display_wayland): set_window_title");
+	print_line("not implemented (Display_wayland): set_window_title");
 }
 void Display_wayland::set_video_mode(const VideoMode &p_video_mode, int p_screen) {
-	print_verbose("not implemented (Display_wayland): set_video_mode");
+	print_line("not implemented (Display_wayland): set_video_mode");
 }
 DisplayDriver::VideoMode Display_wayland::get_video_mode(int p_screen) const {
-	print_verbose("not implemented (Display_wayland): get_video_mode");
+	print_line("not implemented (Display_wayland): get_video_mode");
 	return VideoMode();
 }
 void Display_wayland::get_fullscreen_mode_list(List<VideoMode> *p_list, int p_screen) const {
-	print_verbose("not implemented (Display_wayland): get_fullscreen_mode_list");
+	print_line("not implemented (Display_wayland): get_fullscreen_mode_list");
 }
 Size2 Display_wayland::get_window_size() const {
-	print_verbose("not implemented (Display_wayland): get_mouse_position");
+	print_line("not implemented (Display_wayland): get_mouse_position");
 	return Size2(0, 0);
 }
 bool Display_wayland::get_window_per_pixel_transparency_enabled() const {
-	print_verbose("not implemented (Display_wayland): get_window_per_pixel_transparency_enabled");
+	print_line("not implemented (Display_wayland): get_window_per_pixel_transparency_enabled");
 	return false;
 }
 void Display_wayland::set_window_per_pixel_transparency_enabled(bool p_enabled) {
-	print_verbose("not implemented (Display_wayland): set_window_per_pixel_transparency_enabled");
+	print_line("not implemented (Display_wayland): set_window_per_pixel_transparency_enabled");
 }
 int Display_wayland::get_video_driver_count() const {
-	print_verbose("not implemented (Display_wayland): get_video_driver_count");
+	print_line("not implemented (Display_wayland): get_video_driver_count");
 	return 0;
 }
 const char *Display_wayland::get_video_driver_name(int p_driver) const {
-	print_verbose("not implemented (Display_wayland): get_video_driver_name");
+	print_line("not implemented (Display_wayland): get_video_driver_name");
 	return "";
 }
 int Display_wayland::get_current_video_driver() const {
-	print_verbose("not implemented (Display_wayland): get_current_video_driver");
+	print_line("not implemented (Display_wayland): get_current_video_driver");
 	return 0;
 }
 String Display_wayland::get_name() {
-	print_verbose("not implemented (Display_wayland): get_name");
+	print_line("not implemented (Display_wayland): get_name");
 	return String("");
 }
 bool Display_wayland::can_draw() const {
-	print_verbose("not implemented (Display_wayland): v");
+	print_line("not implemented (Display_wayland): v");
 	return false;
 }
 void Display_wayland::set_cursor_shape(CursorShape p_shape) {
-	print_verbose("not implemented (Display_wayland): set_cursor_shape");
+	print_line("not implemented (Display_wayland): set_cursor_shape");
 }
 void Display_wayland::set_custom_mouse_cursor(const RES &p_cursor, CursorShape p_shape, const Vector2 &p_hotspot) {
-	print_verbose("not implemented (Display_wayland): set_custom_mouse_cursor");
+	print_line("not implemented (Display_wayland): set_custom_mouse_cursor");
 }

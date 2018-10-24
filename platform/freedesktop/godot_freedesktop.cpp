@@ -33,19 +33,19 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "display_x11.h"
 #include "display_wayland.h"
+#include "display_x11.h"
 #include "main/main.h"
 #include "os_freedesktop.h"
 
 int main(int argc, char *argv[]) {
 	OS_Freedesktop os;
-	DisplayDriver* display;
+	DisplayDriver *display;
 	bool on_wayland = true;
-
-	if(on_wayland){
+	//TODO: init whole os class and check if os_wayland or OS_X11 can live
+	if (on_wayland) {
 		display = memnew(Display_wayland);
-	}else {
+	} else {
 		display = memnew(Display_X11);
 	}
 

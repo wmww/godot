@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
-#ifdef X11_ENABLED
-#if defined(OPENGL_ENABLED)
+//#if defined(OPENGL_ENABLED)
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -41,19 +40,19 @@
 
 #include "context_egl_wayland.h"
 
-void ContextGL_X11::release_current() {
+void ContextGL_EGL::release_current() {
 
-	eglMakeCurrent(egl_display, None ,None, NULL);
+	eglMakeCurrent(egl_display, egl_surface, egl_surface, NULL);
 }
 
-void ContextGL_X11::make_current() {
+void ContextGL_EGL::make_current() {
 
-    eglMakeCurrent(egl_display, egl_surface,egl_surface, p->context)
+	eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
 }
 
-void ContextGL_X11::swap_buffers() {
-    
-    eglSwapBuffers(egl_display, egl_surface);
+void ContextGL_EGL::swap_buffers() {
+
+	eglSwapBuffers(egl_display, egl_surface);
 }
 
 // static bool ctxErrorOccurred = false;
@@ -62,21 +61,21 @@ void ContextGL_X11::swap_buffers() {
 // 	return 0;
 // }
 
-static void set_class_hint(Display *p_display, Window p_window) {
-	XClassHint *classHint;
+// static void set_class_hint(Display *p_display, Window p_window) {
+// 	XClassHint *classHint;
 
-	/* set the name and class hints for the window manager to use */
-	classHint = XAllocClassHint();
-	if (classHint) {
-		classHint->res_name = (char *)"Godot_Engine";
-		classHint->res_class = (char *)"Godot";
-	}
-	XSetClassHint(p_display, p_window, classHint);
-	XFree(classHint);
-}
+// 	/* set the name and class hints for the window manager to use */
+// 	classHint = XAllocClassHint();
+// 	if (classHint) {
+// 		classHint->res_name = (char *)"Godot_Engine";
+// 		classHint->res_class = (char *)"Godot";
+// 	}
+// 	XSetClassHint(p_display, p_window, classHint);
+// 	XFree(classHint);
+// }
 
 Error ContextGL_EGL::initialize() {
-
+	print_verbose("start create egl context!");
 	EGLint numConfigs;
 	EGLint majorVersion;
 	EGLint minorVersion;
@@ -90,151 +89,130 @@ Error ContextGL_EGL::initialize() {
 				EGL_BLUE_SIZE, 8,
 				EGL_NONE
 			};
-	EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE };
-	
-    EGLDisplay display = eglGetDisplay(native_display);
+	//EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE };
+
+	EGLDisplay display = eglGetDisplay(native_display);
 	EGLSurface surface;
 	EGLContext context;
 
 	if (display == EGL_NO_DISPLAY) {
-		LOG("No EGL Display...\n");
-		return EGL_FALSE;
+		print_verbose("No EGL Display...\n");
+		return FAILED;
 	}
 
 	// Initialize EGL
 	if (!eglInitialize(display, &majorVersion, &minorVersion)) {
-		LOG("No Initialisation...\n");
-		return EGL_FALSE;
+		print_verbose("No Initialisation...\n");
+		return FAILED;
 	}
 
 	// Get configs
 	if ((eglGetConfigs(display, NULL, 0, &numConfigs) != EGL_TRUE) || (numConfigs == 0)) {
-		LOG("No configuration...\n");
-		return EGL_FALSE;
+		print_verbose("No configuration...\n");
+		return FAILED;
 	}
 
 	// Choose config
 	if ((eglChooseConfig(display, fbAttribs, &config, 1, &numConfigs) != EGL_TRUE) || (numConfigs != 1)) {
-		LOG("No configuration...\n");
-		return EGL_FALSE;
+		print_verbose("No configuration...\n");
+		return FAILED;
 	}
 
 	// Create a surface
 	surface = eglCreateWindowSurface(display, config, native_window, NULL);
 	if (surface == EGL_NO_SURFACE) {
-		LOG("No surface...\n");
-		return EGL_FALSE;
+		print_verbose("No surface...\n");
+		return FAILED;
 	}
-
+	print_verbose("egl surface created!");
 	// Create a GL context
-	context = eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttribs);
-	if (context == EGL_NO_CONTEXT) {
-		LOG("No context...\n");
-		return EGL_FALSE;
-	}
+	switch (context_type) {
+		case OLDSTYLE: {
 
+			EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE };
+			context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attribs);
+		} break;
+		case GLES_2_0_COMPATIBLE: {
+
+			EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE };
+			context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attribs);
+		} break;
+		case GLES_3_0_COMPATIBLE: {
+
+			EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE, EGL_NONE };
+			context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attribs);
+		} break;
+	}
+	if (context == EGL_NO_CONTEXT) {
+		print_verbose("No context...\n");
+		return FAILED;
+	}
+	print_verbose("egl context !!!!");
 	// Make the context current
 	if (!eglMakeCurrent(display, surface, surface, context)) {
-		LOG("Could not make the current window current !\n");
-		return EGL_FALSE;
+		print_verbose("Could not make the current window current !\n");
+		return FAILED;
 	}
-
+	print_verbose("current context exists !");
 	egl_display = display;
 	egl_surface = surface;
-	p->egl_context = context;
-	// return EGL_TRUE;
-    return OK;
-	// switch (context_type) {
-	// 	case OLDSTYLE: {
+	egl_context = context;
 
-	// 		p->glx_context = glXCreateContext(x11_display, vi, 0, GL_TRUE);
-	// 		ERR_FAIL_COND_V(!p->glx_context, ERR_UNCONFIGURED);
-	// 	} break;
-	// 	case GLES_2_0_COMPATIBLE: {
+	return OK;
+}
 
-	// 		p->glx_context = glXCreateNewContext(x11_display, fbconfig, GLX_RGBA_TYPE, 0, true);
-	// 		ERR_FAIL_COND_V(!p->glx_context, ERR_UNCONFIGURED);
-	// 	} break;
-	// 	case GLES_3_0_COMPATIBLE: {
+int ContextGL_EGL::get_window_width() {
+	//TODO
+	return 100;
+	// XWindowAttributes xwa;
+	// XGetWindowAttributes(x11_display, x11_window, &xwa);
 
-	// 		static int context_attribs[] = {
-	// 			GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-	// 			GLX_CONTEXT_MINOR_VERSION_ARB, 3,
-	// 			GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
-	// 			GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB /*|GLX_CONTEXT_DEBUG_BIT_ARB*/,
-	// 			None
-	// 		};
+	// return xwa.width;
+}
 
-	// 		p->glx_context = glXCreateContextAttribsARB(x11_display, fbconfig, NULL, true, context_attribs);
-	// 		ERR_FAIL_COND_V(ctxErrorOccurred || !p->glx_context, ERR_UNCONFIGURED);
-	// 	} break;
+int ContextGL_EGL::get_window_height() {
+	//TODO
+	return 100;
+	// XWindowAttributes xwa;
+	// XGetWindowAttributes(x11_display, x11_window, &xwa);
+
+	// return xwa.height;
+}
+
+void ContextGL_EGL::set_use_vsync(bool p_use) {
+	// static bool setup = false;
+	// static PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT = NULL;
+	// static PFNGLXSWAPINTERVALSGIPROC glXSwapIntervalMESA = NULL;
+	// static PFNGLXSWAPINTERVALSGIPROC glXSwapIntervalSGI = NULL;
+
+	// if (!setup) {
+	// 	setup = true;
+	// 	String extensions = glXQueryExtensionsString(x11_display, DefaultScreen(x11_display));
+	// 	if (extensions.find("GLX_EXT_swap_control") != -1)
+	// 		glXSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalEXT");
+	// 	if (extensions.find("GLX_MESA_swap_control") != -1)
+	// 		glXSwapIntervalMESA = (PFNGLXSWAPINTERVALSGIPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalMESA");
+	// 	if (extensions.find("GLX_SGI_swap_control") != -1)
+	// 		glXSwapIntervalSGI = (PFNGLXSWAPINTERVALSGIPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalSGI");
 	// }
-
-	// x11_window = XCreateWindow(x11_display, RootWindow(x11_display, vi->screen), 0, 0, DisplayDriver::get_singleton()->get_video_mode().width, DisplayDriver::get_singleton()->get_video_mode().height, 0, vi->depth, InputOutput, vi->visual, valuemask, &swa);
-
-	// ERR_FAIL_COND_V(!x11_window, ERR_UNCONFIGURED);
-	// set_class_hint(x11_display, x11_window);
-	// XMapWindow(x11_display, x11_window);
-
-	// XSync(x11_display, False);
-	// XSetErrorHandler(oldHandler);
-
-	// make_current(x11_display, x11_window, p->glx_context);
-
-	// XFree(vi);
-
-	// return OK;
+	// int val = p_use ? 1 : 0;
+	// if (glXSwapIntervalMESA) {
+	// 	glXSwapIntervalMESA(val);
+	// } else if (glXSwapIntervalSGI) {
+	// 	glXSwapIntervalSGI(val);
+	// } else if (glXSwapIntervalEXT) {
+	// 	GLXDrawable drawable = glXGetCurrentDrawable();
+	// 	glXSwapIntervalEXT(x11_display, drawable, val);
+	// } else
+	// 	return;
+	// use_vsync = p_use;
 }
-
-int ContextGL_X11::get_window_width() {
-
-	XWindowAttributes xwa;
-	XGetWindowAttributes(x11_display, x11_window, &xwa);
-
-	return xwa.width;
-}
-
-int ContextGL_X11::get_window_height() {
-	XWindowAttributes xwa;
-	XGetWindowAttributes(x11_display, x11_window, &xwa);
-
-	return xwa.height;
-}
-
-void ContextGL_X11::set_use_vsync(bool p_use) {
-	static bool setup = false;
-	static PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT = NULL;
-	static PFNGLXSWAPINTERVALSGIPROC glXSwapIntervalMESA = NULL;
-	static PFNGLXSWAPINTERVALSGIPROC glXSwapIntervalSGI = NULL;
-
-	if (!setup) {
-		setup = true;
-		String extensions = glXQueryExtensionsString(x11_display, DefaultScreen(x11_display));
-		if (extensions.find("GLX_EXT_swap_control") != -1)
-			glXSwapIntervalEXT = (PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalEXT");
-		if (extensions.find("GLX_MESA_swap_control") != -1)
-			glXSwapIntervalMESA = (PFNGLXSWAPINTERVALSGIPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalMESA");
-		if (extensions.find("GLX_SGI_swap_control") != -1)
-			glXSwapIntervalSGI = (PFNGLXSWAPINTERVALSGIPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalSGI");
-	}
-	int val = p_use ? 1 : 0;
-	if (glXSwapIntervalMESA) {
-		glXSwapIntervalMESA(val);
-	} else if (glXSwapIntervalSGI) {
-		glXSwapIntervalSGI(val);
-	} else if (glXSwapIntervalEXT) {
-		GLXDrawable drawable = glXGetCurrentDrawable();
-		glXSwapIntervalEXT(x11_display, drawable, val);
-	} else
-		return;
-	use_vsync = p_use;
-}
-bool ContextGL_X11::is_using_vsync() const {
+bool ContextGL_EGL::is_using_vsync() const {
 
 	return use_vsync;
 }
 
-ContextGL_EGL::ContextGL_EGL(EGLNativeDisplayType *p_egl_display, EGLNativeWindowType &p_egl_window, const DisplayDriver::VideoMode &p_default_video_mode, ContextType p_context_type) {
+ContextGL_EGL::ContextGL_EGL(EGLNativeDisplayType p_egl_display, EGLNativeWindowType &p_egl_window, const DisplayDriver::VideoMode &p_default_video_mode, ContextType p_context_type) {
 
 	default_video_mode = p_default_video_mode;
 
@@ -243,22 +221,19 @@ ContextGL_EGL::ContextGL_EGL(EGLNativeDisplayType *p_egl_display, EGLNativeWindo
 	double_buffer = false;
 	direct_render = false;
 	egl_minor = egl_major = 0;
-    native_display = p_egl_display;
-    native_window = p_egl_window;
-	p = memnew(ContextGL_EGL_Private);
-	p->egl_context = 0;
+	native_display = p_egl_display;
+	native_window = p_egl_window;
+	egl_context = 0;
 	use_vsync = false;
 }
 
 ContextGL_EGL::~ContextGL_EGL() {
 	release_current();
-	eglDestroySurface(ESContext.display, ESContext.surface);
+	eglDestroySurface(egl_display, egl_surface);
 	// wl_egl_window_destroy(ESContext.native_window);
 	// wl_shell_surface_destroy(shell_surface);
 	// wl_surface_destroy(surface);
-	eglDestroyContext(p->display, p->context);
-	memdelete(p);
+	eglDestroyContext(egl_display, egl_context);
 }
 
-#endif
-#endif
+//#endif
