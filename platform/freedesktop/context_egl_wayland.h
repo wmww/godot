@@ -48,15 +48,17 @@
 class ContextGL_EGL : public ContextGL {
 
 public:
-	enum ContextType {
-		OLDSTYLE,
-		GLES_2_0_COMPATIBLE,
-		GLES_3_0_COMPATIBLE
+	enum Driver {
+		GLES_2_0,
+		GLES_3_0
 	};
 
 private:
 	DisplayDriver::VideoMode default_video_mode;
-	//::Colormap x11_colormap;
+	Driver context_type;
+
+	EGLint width;
+	EGLint height;
 
 	/// Native System informations
 	EGLNativeDisplayType native_display;
@@ -72,9 +74,8 @@ private:
 	//uint16_t window_width, window_height;
 	bool double_buffer;
 	bool direct_render;
-	int egl_minor, egl_major;
+	// int egl_minor, egl_major;
 	bool use_vsync;
-	ContextType context_type;
 
 public:
 	virtual void release_current();
@@ -87,8 +88,8 @@ public:
 
 	virtual void set_use_vsync(bool p_use);
 	virtual bool is_using_vsync() const;
-
-	ContextGL_EGL(EGLNativeDisplayType p_egl_display, EGLNativeWindowType &p_egl_window, const DisplayDriver::VideoMode &p_default_video_mode, ContextType p_context_type);
+	void cleanup();
+	ContextGL_EGL(EGLNativeDisplayType p_egl_display, EGLNativeWindowType &p_egl_window, const DisplayDriver::VideoMode &p_default_video_mode, Driver p_context_type);
 	virtual ~ContextGL_EGL();
 };
 

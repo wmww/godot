@@ -82,7 +82,7 @@ void Display_wayland::xdg_shell_ping_handler(void *data, struct zxdg_shell_v6 *x
 Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_video_driver) {
 
 	// server stuff getten
-	struct wl_display *display = NULL;
+	display = NULL;
 	display = wl_display_connect(NULL);
 	if (display == NULL) {
 		print_line("Can't connect to wayland display !?\n");
@@ -123,16 +123,15 @@ Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_vide
 	wl_surface_commit(surface);
 
 	// wait for the "initial" set of globals to appear
-	wl_display_roundtrip(display);
 
 	zxdg_shell_v6_add_listener(xdg_shell, &xdg_shell_listener, NULL);
+	wl_display_roundtrip(display);
 	//make opaque
 	// region = wl_compositor_create_region(compositor);
 	// wl_region_add(region, 0, 0, p_desired.width, p_desired.height);
 	// wl_surface_set_opaque_region(surface, region);
 
-	wl_display_dispatch(display);
-
+	//wl_display_dispatch(display);
 	struct wl_egl_window *egl_window = wl_egl_window_create(surface, p_desired.width, p_desired.height);
 
 	if (egl_window == EGL_NO_SURFACE) {
@@ -141,83 +140,70 @@ Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_vide
 	} else
 		print_verbose("Window created !\n");
 
-	EGLNativeDisplayType native_display = (EGLNativeDisplayType)display;
-	EGLNativeWindowType native_window = (EGLNativeWindowType)egl_window;
-	ContextGL_EGL::ContextType context_type = ContextGL_EGL::ContextType::GLES_2_0_COMPATIBLE; //TODO: check for possible context types
-	context_gl_egl = memnew(ContextGL_EGL(native_display, native_window, p_desired, context_type));
-	context_gl_egl->initialize();
+	context_gl_egl = NULL;
+	ContextGL_EGL::Driver context_type = ContextGL_EGL::Driver::GLES_3_0; //TODO: check for possible context types
 
-	//OPENGL
-	//#if defined(OPENGL_ENABLED)
+	bool gl_initialization_error = false;
+	while (!context_gl_egl) {
+		EGLNativeDisplayType n_disp = (EGLNativeDisplayType)display;
+		EGLNativeWindowType n_wind = (EGLNativeWindowType)egl_window;
+		context_gl_egl = memnew(ContextGL_EGL(n_disp, n_wind, p_desired, context_type));
+		if (context_gl_egl->initialize() != OK) {
+			memdelete(context_gl_egl);
+			context_gl_egl = NULL;
+			if (GLOBAL_GET("rendering/quality/driver/driver_fallback") == "Best") {
+				if (p_video_driver == VIDEO_DRIVER_GLES2) {
+					gl_initialization_error = true;
+					break;
+				}
 
-	// ContextGL_X11::ContextType opengl_api_type = ContextGL_X11::GLES_3_0_COMPATIBLE;
-
-	// if (p_video_driver == VIDEO_DRIVER_GLES2) {
-	// 	opengl_api_type = ContextGL_X11::GLES_2_0_COMPATIBLE;
-	// }
-
-	// bool editor = Engine::get_singleton()->is_editor_hint();
-	// bool gl_initialization_error = false;
-
-	// context_gl = NULL;
-	// while (!context_gl) {
-	// 	context_gl = memnew(ContextGL_X11(x11_display, x11_window, current_videomode, opengl_api_type));
-
-	// 	if (context_gl->initialize() != OK) {
-	// 		memdelete(context_gl);
-	// 		context_gl = NULL;
-
-	// 		if (GLOBAL_GET("rendering/quality/driver/driver_fallback") == "Best" || editor) {
-	// 			if (p_video_driver == VIDEO_DRIVER_GLES2) {
-	// 				gl_initialization_error = true;
-	// 				break;
-	// 			}
-
-	// 			p_video_driver = VIDEO_DRIVER_GLES2;
-	// 			opengl_api_type = ContextGL_X11::GLES_2_0_COMPATIBLE;
-	// 		} else {
-	// 			gl_initialization_error = true;
-	// 			break;
-	// 		}
-	// 	}
-	// }
-
-	// while (true) {
-	// 	if (opengl_api_type == ContextGL_X11::GLES_3_0_COMPATIBLE) {
-	// 		if (RasterizerGLES3::is_viable() == OK) {
-	// 			RasterizerGLES3::register_config();
-	// 			RasterizerGLES3::make_current();
-	// 			break;
-	// 		} else {
-	// 			if (GLOBAL_GET("rendering/quality/driver/driver_fallback") == "Best" || editor) {
-	// 				p_video_driver = VIDEO_DRIVER_GLES2;
-	// 				opengl_api_type = ContextGL_X11::GLES_2_0_COMPATIBLE;
-	// 				continue;
-	// 			} else {
-	// 				gl_initialization_error = true;
-	// 				break;
-	// 			}
-	// 		}
-	// 	}
-
-	// 	if (opengl_api_type == ContextGL_X11::GLES_2_0_COMPATIBLE) {
-	if (RasterizerDummy::is_viable() == OK) {
-		//RasterizerDummy::register_config();
-		RasterizerDummy::make_current();
-		//break;
-	} else {
-		//gl_initialization_error = true;
-		//break;
+				p_video_driver = VIDEO_DRIVER_GLES2;
+				context_type = ContextGL_EGL::GLES_2_0;
+			} else {
+				gl_initialization_error = true;
+				break;
+			}
+		}
 	}
-	// 	}
-	// }
 
-	// if (gl_initialization_error) {
-	// 	OS::get_singleton()->alert("Your video card driver does not support any of the supported OpenGL versions.\n"
-	// 							   "Please update your drivers or if you have a very old or integrated GPU upgrade it.",
-	// 			"Unable to initialize Video driver");
-	// 	return ERR_UNAVAILABLE;
-	// }
+	eglBindAPI(EGL_OPENGL_API);
+
+	while (true) {
+		if (context_type == ContextGL_EGL::GLES_3_0) {
+			if (RasterizerGLES3::is_viable() == OK) {
+				RasterizerGLES3::register_config();
+				RasterizerGLES3::make_current();
+				break;
+			} else {
+				if (GLOBAL_GET("rendering/quality/driver/driver_fallback") == "Best") {
+					p_video_driver = VIDEO_DRIVER_GLES2;
+					context_type = ContextGL_EGL::GLES_2_0;
+					continue;
+				} else {
+					gl_initialization_error = true;
+					break;
+				}
+			}
+		}
+
+		if (context_type == ContextGL_EGL::GLES_2_0) {
+			if (RasterizerGLES2::is_viable() == OK) {
+				RasterizerGLES2::register_config();
+				RasterizerGLES2::make_current();
+				break;
+			} else {
+				gl_initialization_error = true;
+				break;
+			}
+		}
+	}
+
+	if (gl_initialization_error) {
+		OS::get_singleton()->alert("Your video card driver does not support any of the supported OpenGL versions.\n"
+								   "Please update your drivers or if you have a very old or integrated GPU upgrade it.",
+				"Unable to initialize Video driver");
+		return ERR_UNAVAILABLE;
+	}
 
 	// video_driver_index = p_video_driver;
 
@@ -227,6 +213,10 @@ Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_vide
 
 	//VISUAL SERVER
 	visual_server = memnew(VisualServerRaster);
+
+	visual_server->init();
+
+	input = memnew(InputDefault);
 
 	// if (get_render_thread_mode() != RENDER_THREAD_UNSAFE) {
 
@@ -305,6 +295,7 @@ String Display_wayland::get_name() {
 	return String("");
 }
 bool Display_wayland::can_draw() const {
+	wl_display_dispatch_pending(display);
 	return true;
 }
 void Display_wayland::set_cursor_shape(CursorShape p_shape) {

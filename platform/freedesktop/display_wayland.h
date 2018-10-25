@@ -54,7 +54,10 @@ private:
 	VideoMode current_videomode;
 	List<String> args;
 	ContextGL_EGL *context_gl_egl;
+	InputDefault *input;
 	struct wl_compositor *compositor = NULL;
+
+	struct wl_display *display = NULL;
 	struct wl_surface *surface;
 	struct wl_egl_window *egl_window;
 	struct wl_region *region;
