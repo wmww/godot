@@ -185,7 +185,7 @@ public:
 
 	// virtual void release_rendering_thread();
 	// virtual void make_rendering_thread();
-	// virtual void swap_buffers();
+	virtual void swap_buffers();
 
 	// virtual void set_icon(const Ref<Image> &p_icon);
 

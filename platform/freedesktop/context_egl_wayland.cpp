@@ -65,11 +65,21 @@ void ContextGL_EGL::swap_buffers() {
 Error ContextGL_EGL::initialize() {
 	print_verbose("start create egl context!");
 
+	EGLint configAttribList[] = {
+		EGL_RED_SIZE, 8,
+		EGL_GREEN_SIZE, 8,
+		EGL_BLUE_SIZE, 8,
+		EGL_ALPHA_SIZE, 8,
+		EGL_DEPTH_SIZE, 8,
+		EGL_STENCIL_SIZE, 8,
+		EGL_SAMPLE_BUFFERS, 0,
+		EGL_NONE
+	};
 	EGLint surfaceAttribList[] = {
 		EGL_NONE, EGL_NONE
 	};
 
-	EGLint numConfigs = 0;
+	EGLint numConfigs = 8;
 	EGLint majorVersion = 1;
 	EGLint minorVersion;
 	if (context_type == GLES_2_0) {
@@ -82,16 +92,12 @@ Error ContextGL_EGL::initialize() {
 	egl_surface = EGL_NO_SURFACE;
 	EGLConfig config = nullptr;
 
-	EGLint configAttribList[] = {
-		EGL_RED_SIZE, 8,
-		EGL_GREEN_SIZE, 8,
-		EGL_BLUE_SIZE, 8,
-		EGL_ALPHA_SIZE, 8,
-		EGL_DEPTH_SIZE, 8,
-		EGL_STENCIL_SIZE, 8,
-		EGL_SAMPLE_BUFFERS, 0,
-		EGL_NONE
-	};
+	// EGLint configAttribList[] = {
+	// 	EGL_RED_SIZE, 8,
+	// 	EGL_GREEN_SIZE, 8,
+	// 	EGL_BLUE_SIZE, 8,
+	// 	EGL_NONE
+	// };
 	EGLint contextAttribs[3];
 	if (context_type == GLES_2_0) {
 		contextAttribs[0] = EGL_CONTEXT_CLIENT_VERSION;
@@ -118,7 +124,7 @@ Error ContextGL_EGL::initialize() {
 		print_verbose("No Initialisation...\n");
 		return FAILED;
 	}
-
+	eglBindAPI(EGL_OPENGL_ES_API);
 	// Get configs
 	if ((eglGetConfigs(display, NULL, 0, &numConfigs) != EGL_TRUE) || (numConfigs == 0)) {
 		print_verbose("No configuration...\n");

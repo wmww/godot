@@ -127,9 +127,9 @@ Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_vide
 	zxdg_shell_v6_add_listener(xdg_shell, &xdg_shell_listener, NULL);
 	wl_display_roundtrip(display);
 	//make opaque
-	// region = wl_compositor_create_region(compositor);
-	// wl_region_add(region, 0, 0, p_desired.width, p_desired.height);
-	// wl_surface_set_opaque_region(surface, region);
+	region = wl_compositor_create_region(compositor);
+	wl_region_add(region, 0, 0, p_desired.width, p_desired.height);
+	wl_surface_set_opaque_region(surface, region);
 
 	//wl_display_dispatch(display);
 	struct wl_egl_window *egl_window = wl_egl_window_create(surface, p_desired.width, p_desired.height);
@@ -165,8 +165,6 @@ Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_vide
 			}
 		}
 	}
-
-	eglBindAPI(EGL_OPENGL_API);
 
 	while (true) {
 		if (context_type == ContextGL_EGL::GLES_3_0) {
@@ -303,4 +301,10 @@ void Display_wayland::set_cursor_shape(CursorShape p_shape) {
 }
 void Display_wayland::set_custom_mouse_cursor(const RES &p_cursor, CursorShape p_shape, const Vector2 &p_hotspot) {
 	print_line("not implemented (Display_wayland): set_custom_mouse_cursor");
+}
+
+void Display_wayland::swap_buffers() {
+#if defined(OPENGL_ENABLED)
+	context_gl_egl->swap_buffers();
+#endif
 }
