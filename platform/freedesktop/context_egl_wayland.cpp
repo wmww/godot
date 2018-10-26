@@ -64,7 +64,7 @@ void ContextGL_EGL::swap_buffers() {
 
 Error ContextGL_EGL::initialize() {
 	print_verbose("start create egl context!");
-
+	eglBindAPI(EGL_OPENGL_API);
 	EGLint configAttribList[] = {
 		EGL_RED_SIZE, 8,
 		EGL_GREEN_SIZE, 8,
@@ -99,16 +99,23 @@ Error ContextGL_EGL::initialize() {
 	// 	EGL_NONE
 	// };
 	EGLint contextAttribs[3];
-	if (context_type == GLES_2_0) {
-		contextAttribs[0] = EGL_CONTEXT_CLIENT_VERSION;
-		contextAttribs[1] = 2;
-		contextAttribs[2] = EGL_NONE;
-	} else {
-		contextAttribs[0] = EGL_CONTEXT_CLIENT_VERSION;
-		contextAttribs[1] = 3;
-		contextAttribs[2] = EGL_NONE;
-	}
+	// if (context_type == GLES_2_0) {
+	// 	contextAttribs[0] = EGL_CONTEXT_MAJOR_VERSION;
+	// 	contextAttribs[1] = 3;
+	// 	contextAttribs[0] = EGL_CONTEXT_MINOR_VERSION;
+	// 	contextAttribs[1] = 3;
+	// 	contextAttribs[4] = EGL_NONE;
+	// } else {
+	// 	contextAttribs[0] = EGL_CONTEXT_MAJOR_VERSION;
+	// 	contextAttribs[1] = 3;
+	// 	contextAttribs[0] = EGL_CONTEXT_MINOR_VERSION;
+	// 	contextAttribs[1] = 3;
+	// 	contextAttribs[4] = EGL_NONE;
+	// }
 	//EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE };
+	contextAttribs[0] = EGL_CONTEXT_CLIENT_VERSION;
+	contextAttribs[1] = 4;
+	contextAttribs[2] = EGL_NONE;
 
 	EGLDisplay display = eglGetDisplay(native_display);
 	EGLSurface surface;
@@ -124,12 +131,11 @@ Error ContextGL_EGL::initialize() {
 		print_verbose("No Initialisation...\n");
 		return FAILED;
 	}
-	eglBindAPI(EGL_OPENGL_ES_API);
 	// Get configs
-	if ((eglGetConfigs(display, NULL, 0, &numConfigs) != EGL_TRUE) || (numConfigs == 0)) {
-		print_verbose("No configuration...\n");
-		return FAILED;
-	}
+	// if ((eglGetConfigs(display, NULL, 0, &numConfigs) != EGL_TRUE) || (numConfigs == 0)) {
+	// 	print_verbose("No configuration...\n");
+	// 	return FAILED;
+	// }
 
 	// Choose config
 	if ((eglChooseConfig(display, configAttribList, &config, 1, &numConfigs) != EGL_TRUE) || (numConfigs != 1)) {

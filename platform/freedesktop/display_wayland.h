@@ -187,7 +187,7 @@ public:
 	// virtual void make_rendering_thread();
 	virtual void swap_buffers();
 
-	// virtual void set_icon(const Ref<Image> &p_icon);
+	virtual void set_icon(const Ref<Image> &p_icon);
 
 	// virtual Error native_video_play(String p_path, float p_volume, String p_audio_track, String p_subtitle_track);
 	// virtual bool native_video_is_playing() const;
