@@ -36,7 +36,9 @@
 //#include <wayland-client.h>
 // #include <wayland-egl.h> // Wayland EGL MUST be included before EGL headers
 //#include <wayland-server.h>
+
 #define DISPLAY_WL (Display_wayland *)Display_wayland::get_singleton()
+
 void Display_wayland::global_registry_handler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version) {
 	Display_wayland *d_wl = DISPLAY_WL;
 
@@ -47,10 +49,11 @@ void Display_wayland::global_registry_handler(void *data, struct wl_registry *re
 		d_wl->compositor = (wl_compositor *)wl_registry_bind(registry, id, &wl_compositor_interface, 1);
 	}
 
-	// else if (strcmp(interface, "wl_shell") == 0) {
-	//
-	// 	d_wl->shell = (wl_shell *)wl_registry_bind(registry, id, &wl_shell_interface, 1);
-	// }
+	else if (strcmp(interface, "wl_seat") == 0) {
+
+		d_wl->seat = (wl_seat *)wl_registry_bind(registry, id, &wl_seat_interface, 1);
+		wl_seat_add_listener(d_wl->seat, &d_wl->seat_listener, NULL);
+	}
 
 	else if (strcmp(interface, "zxdg_shell_v6") == 0) {
 
@@ -79,6 +82,48 @@ void Display_wayland::xdg_shell_ping_handler(void *data, struct zxdg_shell_v6 *x
 	zxdg_shell_v6_pong(xdg_shell, serial);
 	printf("ping-pong\n");
 }
+
+void Display_wayland::seat_name_handler(void *data, struct wl_seat *wl_seat, const char *name) {
+}
+void Display_wayland::seat_capabilities_handler(void *data, struct wl_seat *wl_seat, uint32_t capabilities) {
+	Display_wayland *d_wl = DISPLAY_WL;
+	if (capabilities & WL_SEAT_CAPABILITY_POINTER) {
+		print_verbose("pointer!!!");
+		d_wl->mouse_pointer = wl_seat_get_pointer(wl_seat);
+		wl_pointer_add_listener(d_wl->mouse_pointer, &d_wl->pointer_listener, NULL);
+	}
+	if (capabilities & WL_SEAT_CAPABILITY_KEYBOARD) {
+		print_verbose("keyboard!!!");
+	}
+	if (capabilities & WL_SEAT_CAPABILITY_TOUCH) {
+		print_verbose("touch!!!");
+	}
+}
+void Display_wayland::pointer_enter_handler(void *data, struct wl_pointer *wl_pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t surface_x, wl_fixed_t surface_y) {
+}
+void Display_wayland::pointer_leave_handler(void *data, struct wl_pointer *wl_pointer, uint32_t serial, struct wl_surface *surface) {
+}
+void Display_wayland::pointer_motion_handler(void *data, struct wl_pointer *wl_pointer, uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y) {
+	Display_wayland *d_wl = DISPLAY_WL;
+	Ref<InputEventMouseMotion> mm;
+	mm.instance();
+	mm->set_position(Vector2(surface_x, surface_y));
+	mm->set_global_position(Vector2(surface_x, surface_y));
+	d_wl->input->parse_input_event(mm);
+}
+void Display_wayland::pointer_button_handler(void *data, struct wl_pointer *wl_pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state) {
+}
+void Display_wayland::pointer_axis_handler(void *data, struct wl_pointer *wl_pointer, uint32_t time, uint32_t axis, wl_fixed_t value) {
+}
+void Display_wayland::pointer_frame_handler(void *data, struct wl_pointer *wl_pointer) {
+}
+void Display_wayland::pointer_axis_source_handler(void *data, struct wl_pointer *wl_pointer, uint32_t axis_source) {
+}
+void Display_wayland::pointer_axis_stop_handler(void *data, struct wl_pointer *wl_pointer, uint32_t time, uint32_t axis) {
+}
+void Display_wayland::pointer_axis_discrete_handler(void *data, struct wl_pointer *wl_pointer, uint32_t axis, int32_t discrete) {
+}
+//Display_wayland
 Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_video_driver) {
 
 	// server stuff getten
@@ -96,6 +141,10 @@ Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_vide
 	wl_display_dispatch(display);
 	wl_display_roundtrip(display);
 
+	//get seat...
+	if (seat == NULL) {
+		print_verbose("We got a seat!\n");
+	}
 	// If at this point, global_registry_handler didn't set the
 	// compositor, nor the shell, bailout !
 	if (compositor == NULL || xdg_shell == NULL) {
@@ -233,7 +282,7 @@ void Display_wayland::finalize_display() {
 }
 void Display_wayland::set_main_loop(MainLoop *p_main_loop) {
 	main_loop = p_main_loop;
-	print_line("not implemented (Display_wayland): set_main_loop");
+	print_line("set_main_loop, main loop set");
 }
 void Display_wayland::delete_main_loop() {
 	print_line("not implemented (Display_wayland): delete_main_loop");
@@ -308,6 +357,5 @@ void Display_wayland::swap_buffers() {
 	context_gl_egl->swap_buffers();
 #endif
 }
-void Display_wayland::set_icon(const Ref<Image> &p_icon){
-	
+void Display_wayland::set_icon(const Ref<Image> &p_icon) {
 }

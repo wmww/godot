@@ -61,10 +61,11 @@ private:
 	struct wl_surface *surface;
 	struct wl_egl_window *egl_window;
 	struct wl_region *region;
-	// struct wl_shell *shell;
 	struct zxdg_shell_v6 *xdg_shell;
 	struct zxdg_surface_v6 *xdg_surface;
 	struct zxdg_toplevel_v6 *xdg_toplevel;
+	struct wl_seat *seat;
+	struct wl_pointer *mouse_pointer;
 	//wayland listeners
 	const struct wl_registry_listener registry_listener = {
 		&global_registry_handler,
@@ -89,6 +90,34 @@ private:
 		.ping = &xdg_shell_ping_handler
 	};
 	static void xdg_shell_ping_handler(void *data, struct zxdg_shell_v6 *xdg_shell, uint32_t serial);
+
+	const struct wl_seat_listener seat_listener = {
+		&seat_capabilities_handler,
+		&seat_name_handler
+	};
+	static void seat_name_handler(void *data, struct wl_seat *wl_seat, const char *name);
+	static void seat_capabilities_handler(void *data, struct wl_seat *wl_seat, uint32_t capabilities);
+
+	const struct wl_pointer_listener pointer_listener = {
+		&pointer_enter_handler,
+		&pointer_leave_handler,
+		&pointer_motion_handler,
+		&pointer_button_handler,
+		&pointer_axis_handler,
+		&pointer_frame_handler,
+		&pointer_axis_source_handler,
+		&pointer_axis_stop_handler,
+		&pointer_axis_discrete_handler
+	};
+	static void pointer_enter_handler(void *data, struct wl_pointer *wl_pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t surface_x, wl_fixed_t surface_y);
+	static void pointer_leave_handler(void *data, struct wl_pointer *wl_pointer, uint32_t serial, struct wl_surface *surface);
+	static void pointer_motion_handler(void *data, struct wl_pointer *wl_pointer, uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y);
+	static void pointer_button_handler(void *data, struct wl_pointer *wl_pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
+	static void pointer_axis_handler(void *data, struct wl_pointer *wl_pointer, uint32_t time, uint32_t axis, wl_fixed_t value);
+	static void pointer_frame_handler(void *data, struct wl_pointer *wl_pointer);
+	static void pointer_axis_source_handler(void *data, struct wl_pointer *wl_pointer, uint32_t axis_source);
+	static void pointer_axis_stop_handler(void *data, struct wl_pointer *wl_pointer, uint32_t time, uint32_t axis);
+	static void pointer_axis_discrete_handler(void *data, struct wl_pointer *wl_pointer, uint32_t axis, int32_t discrete);
 
 protected:
 	Error initialize_display(const VideoMode &p_desired, int p_video_driver);

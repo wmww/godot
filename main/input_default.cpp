@@ -304,7 +304,7 @@ void InputDefault::_parse_input_event_impl(const Ref<InputEvent> &p_event, bool 
 		if (mouse_pos != pos) {
 			set_mouse_position(pos);
 		}
-
+		print_verbose(String(pos));
 		if (main_loop && emulate_touch_from_mouse && !p_is_emulated && mm->get_button_mask() & 1) {
 			Ref<InputEventScreenDrag> drag_event;
 			drag_event.instance();
