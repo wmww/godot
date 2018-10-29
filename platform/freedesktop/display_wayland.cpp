@@ -107,8 +107,8 @@ void Display_wayland::pointer_motion_handler(void *data, struct wl_pointer *wl_p
 	Display_wayland *d_wl = DISPLAY_WL;
 	Ref<InputEventMouseMotion> mm;
 	mm.instance();
-	mm->set_position(Vector2(surface_x, surface_y));
-	mm->set_global_position(Vector2(surface_x, surface_y));
+	mm->set_position(Vector2(wl_fixed_to_double(surface_x), wl_fixed_to_double(surface_x)));
+	mm->set_global_position(Vector2(wl_fixed_to_double(surface_y), wl_fixed_to_double(surface_y)));
 	d_wl->input->parse_input_event(mm);
 }
 void Display_wayland::pointer_button_handler(void *data, struct wl_pointer *wl_pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state) {
@@ -168,7 +168,7 @@ Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_vide
 
 	xdg_toplevel = zxdg_surface_v6_get_toplevel(xdg_surface);
 	zxdg_toplevel_v6_add_listener(xdg_toplevel, &xdg_toplevel_listener, NULL);
-
+	zxdg_toplevel_v6_set_title(xdg_toplevel, "Godot");
 	wl_surface_commit(surface);
 
 	// wait for the "initial" set of globals to appear
@@ -316,7 +316,7 @@ void Display_wayland::get_fullscreen_mode_list(List<VideoMode> *p_list, int p_sc
 }
 Size2 Display_wayland::get_window_size() const {
 	//print_line("not implemented (Display_wayland): get_mouse_position");
-	return Size2(0, 0);
+	return Size2(context_gl_egl->get_window_width(), context_gl_egl->get_window_height());
 }
 bool Display_wayland::get_window_per_pixel_transparency_enabled() const {
 	print_line("not implemented (Display_wayland): get_window_per_pixel_transparency_enabled");

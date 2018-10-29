@@ -1865,7 +1865,7 @@ bool Main::iteration() {
 	VisualServer::get_singleton()->sync(); //sync if still drawing from previous frames.
 
 	if (DisplayDriver::get_singleton()->can_draw() && !disable_render_loop) {
-
+		force_redraw_requested = true;
 		if ((!force_redraw_requested) && OS::get_singleton()->is_in_low_processor_usage_mode()) {
 			if (VisualServer::get_singleton()->has_changed()) {
 				VisualServer::get_singleton()->draw(true, scaled_step); // flush visual commands

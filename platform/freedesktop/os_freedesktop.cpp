@@ -30,8 +30,8 @@
 
 #include "os_freedesktop.h"
 #include "core/os/displaydriver.h"
-
 #include "core/print_string.h"
+#include "drivers/gles3/rasterizer_gles3.h"
 #include "errno.h"
 #include "key_mapping_x11.h"
 
@@ -39,11 +39,10 @@
 #include <mntent.h>
 #endif
 
+#include "main/main.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "main/main.h"
 
 #include <dlfcn.h>
 #include <fcntl.h>
@@ -255,6 +254,10 @@ void OS_Freedesktop::run() {
 		// #endif
 		if (Main::iteration())
 			break;
+		// glClearColor(0.1, 0.8, 0.4, 1.0);
+		// glClear(GL_COLOR_BUFFER_BIT);
+		// glFlush();
+		// DisplayDriver::get_singleton()->swap_buffers();
 	};
 
 	main_loop->finish();
