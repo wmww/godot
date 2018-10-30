@@ -57,7 +57,9 @@ private:
 	VisualServer *visual_server;
 	VideoMode current_videomode;
 	ContextGL_EGL *context_gl_egl;
-	// List<String> args;
+
+	//display private functions
+	void _get_server_refs();
 
 	//wl private members
 	struct wl_compositor *compositor = NULL;
@@ -255,7 +257,7 @@ public:
 	// bool is_layered_allowed() const { return _allow_layered; }
 
 	// virtual void set_context(int p_context);
-	// virtual void process_events();
+	virtual void process_events();
 
 	// DisplayDriver();
 	// virtual ~DisplayDriver();

@@ -59,7 +59,6 @@ void ContextGL_EGL::swap_buffers() {
 
 		// tell rasterizer to reload textures and stuff?
 	}
-	eglSwapBuffers(egl_display, egl_surface);
 }
 
 Error ContextGL_EGL::initialize() {
@@ -69,7 +68,7 @@ Error ContextGL_EGL::initialize() {
 		EGL_RED_SIZE, 8,
 		EGL_GREEN_SIZE, 8,
 		EGL_BLUE_SIZE, 8,
-		EGL_DEPTH_SIZE, 8,
+		// EGL_DEPTH_SIZE, 8,
 		// EGL_STENCIL_SIZE, 8,
 		// EGL_SAMPLE_BUFFERS, 0,
 		EGL_NONE

@@ -101,8 +101,10 @@ void Display_wayland::seat_capabilities_handler(void *data, struct wl_seat *wl_s
 	}
 }
 void Display_wayland::pointer_enter_handler(void *data, struct wl_pointer *wl_pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t surface_x, wl_fixed_t surface_y) {
+	print_verbose("pointer entered");
 }
 void Display_wayland::pointer_leave_handler(void *data, struct wl_pointer *wl_pointer, uint32_t serial, struct wl_surface *surface) {
+	print_verbose("pointer left");
 }
 void Display_wayland::pointer_motion_handler(void *data, struct wl_pointer *wl_pointer, uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y) {
 	Display_wayland *d_wl = DISPLAY_WL;
@@ -158,8 +160,7 @@ void Display_wayland::pointer_axis_discrete_handler(void *data, struct wl_pointe
 //
 
 //Display_wayland
-Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_video_driver) {
-
+void Display_wayland::_get_server_refs() {
 	// server stuff getten
 	display = NULL;
 	display = wl_display_connect(NULL);
@@ -167,18 +168,16 @@ Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_vide
 		print_line("Can't connect to wayland display !?\n");
 		exit(1);
 	}
-	print_line("Got a display !");
 	struct wl_registry *wl_registry = wl_display_get_registry(display);
 	wl_registry_add_listener(wl_registry, &registry_listener, NULL);
 
 	// This call the attached listener global_registry_handler
 	wl_display_dispatch(display);
 	wl_display_roundtrip(display);
+}
 
-	//get seat...
-	if (seat == NULL) {
-		print_verbose("We got a seat!\n");
-	}
+Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_video_driver) {
+	_get_server_refs();
 	// If at this point, global_registry_handler didn't set the
 	// compositor, nor the shell, bailout !
 	if (compositor == NULL || xdg_shell == NULL) {
@@ -285,6 +284,13 @@ Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_vide
 				"Unable to initialize Video driver");
 		return ERR_UNAVAILABLE;
 	}
+	glClearColor(1.0, 1.0, 0.0, 0.1);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glFlush();
+
+	swap_buffers();
+	wl_display_dispatch(display);
+	wl_display_roundtrip(display);
 
 	// video_driver_index = p_video_driver;
 
@@ -312,6 +318,7 @@ Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_vide
 	return Error::OK;
 }
 void Display_wayland::finalize_display() {
+	wl_display_disconnect(display);
 	print_line("not implemented (Display_wayland): finalize_display");
 }
 void Display_wayland::set_main_loop(MainLoop *p_main_loop) {
@@ -389,7 +396,12 @@ void Display_wayland::set_custom_mouse_cursor(const RES &p_cursor, CursorShape p
 void Display_wayland::swap_buffers() {
 #if defined(OPENGL_ENABLED)
 	context_gl_egl->swap_buffers();
+	print_verbose("swap");
 #endif
 }
 void Display_wayland::set_icon(const Ref<Image> &p_icon) {
+}
+
+void Display_wayland::process_events() {
+	wl_display_dispatch_pending(display);
 }

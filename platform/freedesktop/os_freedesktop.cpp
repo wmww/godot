@@ -248,16 +248,12 @@ void OS_Freedesktop::run() {
 
 	while (!force_quit) {
 
-		DisplayDriver::get_singleton()->process_events();
 		// #ifdef JOYDEV_ENABLED
 		//		joypad->process_joypads();
 		// #endif
 		if (Main::iteration())
 			break;
-		// glClearColor(0.1, 0.8, 0.4, 1.0);
-		// glClear(GL_COLOR_BUFFER_BIT);
-		// glFlush();
-		// DisplayDriver::get_singleton()->swap_buffers();
+		DisplayDriver::get_singleton()->process_events();
 	};
 
 	main_loop->finish();
