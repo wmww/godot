@@ -49,12 +49,17 @@
 
 class Display_wayland : public DisplayDriver {
 private:
+	// Display privat members
+	Vector2 _mouse_pos;
+	// godot private members
 	MainLoop *main_loop;
+	InputDefault *input;
 	VisualServer *visual_server;
 	VideoMode current_videomode;
-	List<String> args;
 	ContextGL_EGL *context_gl_egl;
-	InputDefault *input;
+	// List<String> args;
+
+	//wl private members
 	struct wl_compositor *compositor = NULL;
 
 	struct wl_display *display = NULL;

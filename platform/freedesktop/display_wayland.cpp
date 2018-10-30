@@ -32,11 +32,12 @@
 #include "drivers/gles2/rasterizer_gles2.h"
 #include "drivers/gles3/rasterizer_gles3.h"
 #include "servers/visual/visual_server_raster.h"
-//#include <wayland-client-protocol.h>
-//#include <wayland-client.h>
-// #include <wayland-egl.h> // Wayland EGL MUST be included before EGL headers
-//#include <wayland-server.h>
-
+#include <linux/input-event-codes.h>
+//
+//
+// Wayland events
+//
+//
 #define DISPLAY_WL (Display_wayland *)Display_wayland::get_singleton()
 
 void Display_wayland::global_registry_handler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version) {
@@ -107,11 +108,37 @@ void Display_wayland::pointer_motion_handler(void *data, struct wl_pointer *wl_p
 	Display_wayland *d_wl = DISPLAY_WL;
 	Ref<InputEventMouseMotion> mm;
 	mm.instance();
-	mm->set_position(Vector2(wl_fixed_to_double(surface_x), wl_fixed_to_double(surface_x)));
-	mm->set_global_position(Vector2(wl_fixed_to_double(surface_y), wl_fixed_to_double(surface_y)));
+	float x = (float)wl_fixed_to_double(surface_x);
+	float y = (float)wl_fixed_to_double(surface_y);
+	Vector2 myVec = Vector2();
+	myVec.x = x;
+	myVec.y = y;
+	d_wl->_mouse_pos = myVec;
+	mm->set_position(d_wl->_mouse_pos);
+	mm->set_global_position(d_wl->_mouse_pos);
 	d_wl->input->parse_input_event(mm);
 }
 void Display_wayland::pointer_button_handler(void *data, struct wl_pointer *wl_pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state) {
+	Display_wayland *d_wl = DISPLAY_WL;
+	Ref<InputEventMouseButton> mb;
+	mb.instance();
+	mb->set_pressed(state == WL_POINTER_BUTTON_STATE_PRESSED);
+	switch (button) {
+		case BTN_LEFT:
+			mb->set_button_index(BUTTON_LEFT);
+			break;
+		case BTN_RIGHT:
+			mb->set_button_index(BUTTON_RIGHT);
+			break;
+		case BTN_MIDDLE:
+			mb->set_button_index(BUTTON_MIDDLE);
+			break;
+		default:
+			break;
+	}
+	mb->set_position(d_wl->_mouse_pos);
+	mb->set_global_position(d_wl->_mouse_pos);
+	d_wl->input->parse_input_event(mb);
 }
 void Display_wayland::pointer_axis_handler(void *data, struct wl_pointer *wl_pointer, uint32_t time, uint32_t axis, wl_fixed_t value) {
 }
@@ -123,6 +150,13 @@ void Display_wayland::pointer_axis_stop_handler(void *data, struct wl_pointer *w
 }
 void Display_wayland::pointer_axis_discrete_handler(void *data, struct wl_pointer *wl_pointer, uint32_t axis, int32_t discrete) {
 }
+
+//
+//
+// end of wayland events
+//
+//
+
 //Display_wayland
 Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_video_driver) {
 
@@ -282,7 +316,7 @@ void Display_wayland::finalize_display() {
 }
 void Display_wayland::set_main_loop(MainLoop *p_main_loop) {
 	main_loop = p_main_loop;
-	print_line("set_main_loop, main loop set");
+	input->set_main_loop(p_main_loop);
 }
 void Display_wayland::delete_main_loop() {
 	print_line("not implemented (Display_wayland): delete_main_loop");
