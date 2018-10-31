@@ -56,31 +56,31 @@ void Display_wayland::global_registry_handler(void *data, struct wl_registry *re
 		wl_seat_add_listener(d_wl->seat, &d_wl->seat_listener, NULL);
 	}
 
-	else if (strcmp(interface, "zxdg_shell_v6") == 0) {
+	else if (strcmp(interface, "xdg_wm_base") == 0) {
 
-		d_wl->xdg_shell = (zxdg_shell_v6 *)wl_registry_bind(registry, id, &zxdg_shell_v6_interface, 1);
+		d_wl->xdgbase = (xdg_wm_base *)wl_registry_bind(registry, id, &xdg_wm_base_interface, 1);
 	}
 }
 
 void Display_wayland::global_registry_remover(void *data, struct wl_registry *wl_registry, uint32_t name) {
 }
 
-void Display_wayland::xdg_toplevel_configure_handler(void *data, struct zxdg_toplevel_v6 *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states) {
+void Display_wayland::xdg_toplevel_configure_handler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states) {
 
 	printf("configure: %dx%d\n", width, height);
 }
 
-void Display_wayland::xdg_toplevel_close_handler(void *data, struct zxdg_toplevel_v6 *xdg_toplevel) {
+void Display_wayland::xdg_toplevel_close_handler(void *data, struct xdg_toplevel *xdg_toplevel) {
 
 	printf("close\n");
 }
 
-void Display_wayland::xdg_surface_configure_handler(void *data, struct zxdg_surface_v6 *xdg_surface, uint32_t serial) {
+void Display_wayland::xdg_surface_configure_handler(void *data, struct xdg_surface *xdg_surface, uint32_t serial) {
 	printf("configure surface: %d", serial);
-	zxdg_surface_v6_ack_configure(xdg_surface, serial);
+	xdg_surface_ack_configure(xdg_surface, serial);
 }
-void Display_wayland::xdg_shell_ping_handler(void *data, struct zxdg_shell_v6 *xdg_shell, uint32_t serial) {
-	zxdg_shell_v6_pong(xdg_shell, serial);
+void Display_wayland::xdg_ping_handler(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial) {
+	xdg_wm_base_pong(xdg_wm_base, serial);
 	printf("ping-pong\n");
 }
 
@@ -180,7 +180,7 @@ Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_vide
 	_get_server_refs();
 	// If at this point, global_registry_handler didn't set the
 	// compositor, nor the shell, bailout !
-	if (compositor == NULL || xdg_shell == NULL) {
+	if (compositor == NULL || xdgbase == NULL) {
 		print_verbose("No compositor !? No Shell !! There's NOTHING in here !\n");
 		exit(1);
 	} else {
@@ -195,18 +195,18 @@ Error Display_wayland::initialize_display(const VideoMode &p_desired, int p_vide
 	} else
 		print_verbose("Got a compositor surface !\n");
 
-	xdg_surface = zxdg_shell_v6_get_xdg_surface(xdg_shell, surface);
-	zxdg_surface_v6_add_listener(xdg_surface, &xdg_surface_listener, NULL);
+	xdgsurface = xdg_wm_base_get_xdg_surface(xdgbase, surface);
+	xdg_surface_add_listener(xdgsurface, &xdg_surface_listener, NULL);
 	// shell_surface = wl_shell_get_shell_surface(shell, surface);
 
-	xdg_toplevel = zxdg_surface_v6_get_toplevel(xdg_surface);
-	zxdg_toplevel_v6_add_listener(xdg_toplevel, &xdg_toplevel_listener, NULL);
-	zxdg_toplevel_v6_set_title(xdg_toplevel, "Godot");
+	xdgtoplevel = xdg_surface_get_toplevel(xdgsurface);
+	xdg_toplevel_add_listener(xdgtoplevel, &xdg_toplevel_listener, NULL);
+	xdg_toplevel_set_title(xdgtoplevel, "Godot");
 	wl_surface_commit(surface);
 
 	// wait for the "initial" set of globals to appear
 
-	zxdg_shell_v6_add_listener(xdg_shell, &xdg_shell_listener, NULL);
+	xdg_wm_base_add_listener(xdgbase, &xdg_wm_base_listener, NULL);
 	wl_display_roundtrip(display);
 	//make opaque
 	// region = wl_compositor_create_region(compositor);
@@ -342,7 +342,7 @@ int Display_wayland::get_mouse_button_state() const {
 	return 0;
 }
 void Display_wayland::set_window_title(const String &p_title) {
-	zxdg_toplevel_v6_set_title(xdg_toplevel, (char *)p_title.c_str());
+	xdg_toplevel_set_title(xdgtoplevel, (char *)p_title.c_str());
 	print_line("not implemented (Display_wayland): set_window_title" + p_title);
 }
 void Display_wayland::set_video_mode(const VideoMode &p_video_mode, int p_screen) {
@@ -403,5 +403,5 @@ void Display_wayland::set_icon(const Ref<Image> &p_icon) {
 }
 
 void Display_wayland::process_events() {
-	wl_display_dispatch_pending(display);
+	wl_display_dispatch(display);
 }
