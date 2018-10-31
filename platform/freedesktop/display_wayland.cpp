@@ -334,8 +334,7 @@ MainLoop *Display_wayland::get_main_loop() const {
 }
 
 Point2 Display_wayland::get_mouse_position() const {
-	//print_line("not implemented (Display_wayland): get_mouse_position");
-	return Point2(0, 0);
+	return _mouse_pos;
 }
 int Display_wayland::get_mouse_button_state() const {
 	print_line("not implemented (Display_wayland): get_mouse_button_state");
@@ -396,7 +395,6 @@ void Display_wayland::set_custom_mouse_cursor(const RES &p_cursor, CursorShape p
 void Display_wayland::swap_buffers() {
 #if defined(OPENGL_ENABLED)
 	context_gl_egl->swap_buffers();
-	print_verbose("swap");
 #endif
 }
 void Display_wayland::set_icon(const Ref<Image> &p_icon) {
