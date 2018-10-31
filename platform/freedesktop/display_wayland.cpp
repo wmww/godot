@@ -95,6 +95,9 @@ void Display_wayland::seat_capabilities_handler(void *data, struct wl_seat *wl_s
 	}
 	if (capabilities & WL_SEAT_CAPABILITY_KEYBOARD) {
 		print_verbose("keyboard!!!");
+		struct wl_keyboard *keyboard;
+		keyboard = wl_seat_get_keyboard(wl_seat);
+		wl_keyboard_add_listener(keyboard, &d_wl->keyboard_listener, NULL);
 	}
 	if (capabilities & WL_SEAT_CAPABILITY_TOUCH) {
 		print_verbose("touch!!!");
@@ -151,6 +154,19 @@ void Display_wayland::pointer_axis_source_handler(void *data, struct wl_pointer 
 void Display_wayland::pointer_axis_stop_handler(void *data, struct wl_pointer *wl_pointer, uint32_t time, uint32_t axis) {
 }
 void Display_wayland::pointer_axis_discrete_handler(void *data, struct wl_pointer *wl_pointer, uint32_t axis, int32_t discrete) {
+}
+
+void Display_wayland::keyboard_keymap_handler(void *data, struct wl_keyboard *wl_keyboard, uint32_t format, int32_t fd, uint32_t size) {
+}
+void Display_wayland::keyboard_enter_handler(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, struct wl_surface *surface, struct wl_array *keys) {
+}
+void Display_wayland::keyboard_leave_handler(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, struct wl_surface *surface) {
+}
+void Display_wayland::keyboard_key_handler(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) {
+}
+void Display_wayland::keyboard_modifier_handler(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group) {
+}
+void Display_wayland::keyboard_repeat_info_handler(void *data, struct wl_keyboard *wl_keyboard, int32_t rate, int32_t delay) {
 }
 
 //

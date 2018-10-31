@@ -126,6 +126,24 @@ private:
 	static void pointer_axis_stop_handler(void *data, struct wl_pointer *wl_pointer, uint32_t time, uint32_t axis);
 	static void pointer_axis_discrete_handler(void *data, struct wl_pointer *wl_pointer, uint32_t axis, int32_t discrete);
 
+	const struct wl_keyboard_listener keyboard_listener = {
+		&keyboard_keymap_handler,
+		&keyboard_enter_handler,
+		&keyboard_leave_handler,
+		&keyboard_key_handler,
+		&keyboard_modifier_handler,
+		&keyboard_repeat_info_handler,
+	};
+	static void keyboard_keymap_handler(void *data, struct wl_keyboard *wl_keyboard, uint32_t format, int32_t fd, uint32_t size);
+	static void keyboard_enter_handler(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, struct wl_surface *surface, struct wl_array *keys);
+	static void keyboard_leave_handler(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, struct wl_surface *surface);
+	static void keyboard_key_handler(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state);
+	static void keyboard_modifier_handler(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group);
+	static void keyboard_repeat_info_handler(void *data, struct wl_keyboard *wl_keyboard, int32_t rate, int32_t delay);
+
+	// 'void (*)(void*, wl_keyboard*, int32_t, int32_t) 								 {aka void (*)(void*, wl_keyboard*, int, int)}'
+	// 'void (*)(void*, wl_keyboard*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t) {aka void (*)(void*, wl_keyboard*, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int)}' [-fpermissive]
+
 protected:
 	Error initialize_display(const VideoMode &p_desired, int p_video_driver);
 	void finalize_display();
