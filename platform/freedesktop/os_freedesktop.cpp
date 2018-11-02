@@ -30,8 +30,8 @@
 
 #include "os_freedesktop.h"
 #include "core/os/displaydriver.h"
-
 #include "core/print_string.h"
+#include "drivers/gles3/rasterizer_gles3.h"
 #include "errno.h"
 #include "key_mapping_x11.h"
 
@@ -39,11 +39,10 @@
 #include <mntent.h>
 #endif
 
+#include "main/main.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "main/main.h"
 
 #include <dlfcn.h>
 #include <fcntl.h>
@@ -249,12 +248,12 @@ void OS_Freedesktop::run() {
 
 	while (!force_quit) {
 
-		DisplayDriver::get_singleton()->process_events();
 		// #ifdef JOYDEV_ENABLED
 		//		joypad->process_joypads();
 		// #endif
 		if (Main::iteration())
 			break;
+		DisplayDriver::get_singleton()->process_events();
 	};
 
 	main_loop->finish();
