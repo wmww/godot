@@ -3491,8 +3491,9 @@ WaylandThread::EmbeddingCompositorState *WaylandThread::godot_embedding_composit
 int WaylandThread::window_state_get_preferred_buffer_scale(WindowState *p_ws) {
 	ERR_FAIL_NULL_V(p_ws, 1);
 
-	if (p_ws->preferred_fractional_scale > 0) {
-		// We're scaling fractionally. Per spec, the buffer scale is always 1.
+	if (p_ws->wp_viewport) {
+		// When using wp_viewport, the buffer scale is always 1. Effective scaling
+		// is handled via fractional_scale and wp_viewport_set_destination instead.
 		return 1;
 	}
 
@@ -3544,7 +3545,7 @@ void WaylandThread::window_state_update_size(WindowState *p_ws, int p_width, int
 	ERR_FAIL_NULL(p_ws);
 
 	int preferred_buffer_scale = window_state_get_preferred_buffer_scale(p_ws);
-	bool using_fractional = p_ws->preferred_fractional_scale > 0;
+	bool using_viewport = p_ws->wp_viewport != nullptr;
 
 	// If neither is true we no-op.
 	bool scale_changed = false;
@@ -3557,9 +3558,24 @@ void WaylandThread::window_state_update_size(WindowState *p_ws, int p_width, int
 		size_changed = true;
 	}
 
-	if (using_fractional && p_ws->fractional_scale != p_ws->preferred_fractional_scale) {
-		p_ws->fractional_scale = p_ws->preferred_fractional_scale;
-		scale_changed = true;
+	if (using_viewport) {
+		double effective_scale;
+		if (p_ws->preferred_fractional_scale > 0) {
+			effective_scale = p_ws->preferred_fractional_scale;
+		} else {
+			// Use the max output scale as an integer effective scale.
+			effective_scale = 1.0;
+			for (struct wl_output *wl_output : p_ws->registry->wl_outputs) {
+				ScreenState *ss = wl_output_get_screen_state(wl_output);
+				if (ss && ss->pending_data.scale > effective_scale) {
+					effective_scale = ss->pending_data.scale;
+				}
+			}
+		}
+		if (p_ws->fractional_scale != effective_scale) {
+			p_ws->fractional_scale = effective_scale;
+			scale_changed = true;
+		}
 	}
 
 	if (p_ws->buffer_scale != preferred_buffer_scale) {
@@ -3567,7 +3583,7 @@ void WaylandThread::window_state_update_size(WindowState *p_ws, int p_width, int
 		p_ws->buffer_scale = preferred_buffer_scale;
 		p_ws->buffer_scale_changed = true;
 
-		if (!using_fractional) {
+		if (!using_viewport) {
 			// We don't bother updating everything else if it's turned on though.
 			scale_changed = true;
 		}
@@ -3596,8 +3612,8 @@ void WaylandThread::window_state_update_size(WindowState *p_ws, int p_width, int
 		double win_scale = window_state_get_scale_factor(p_ws);
 		Size2i scaled_size = scale_vector2i(p_ws->rect.size, win_scale);
 
-		if (using_fractional) {
-			DEBUG_LOG_WAYLAND_THREAD(vformat("Resizing the window from %s to %s (fractional scale x%f).", p_ws->rect.size, scaled_size, p_ws->fractional_scale));
+		if (using_viewport) {
+			DEBUG_LOG_WAYLAND_THREAD(vformat("Resizing the window from %s to %s (viewport scale x%f).", p_ws->rect.size, scaled_size, p_ws->fractional_scale));
 		} else {
 			DEBUG_LOG_WAYLAND_THREAD(vformat("Resizing the window from %s to %s (buffer scale x%d).", p_ws->rect.size, scaled_size, p_ws->buffer_scale));
 		}
